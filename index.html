@@ -2,7 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>TEMPLATE-IN Pro | Export System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEMPLATE-IN Pro | Real-time Interactive</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,168 +12,250 @@
         body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
         /* SIDEBAR */
-        .sidebar { width: 380px; background: #111827; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; height: 100vh; box-sizing: border-box; }
-        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 40px; background: #1e293b; }
-        .preview-zoom { transform: scale(0.65); transform-origin: top center; margin-bottom: -280px; }
-        .page-wrapper { position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); background: white; line-height: 0; display: inline-block; }
-        .template-frame { position: relative; display: block; max-width: 500px; height: auto; pointer-events: none; z-index: 2; }
+        .sidebar { width: 350px; background: #111827; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; z-index: 1000; }
+        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 40px; background: #1e293b; position: relative; }
+
+        /* CANVAS STYLES */
+        .page-wrapper { position: relative; background: white; line-height: 0; box-shadow: 0 20px 50px rgba(0,0,0,0.5); user-select: none; }
+        .template-frame { position: relative; z-index: 2; width: 500px; pointer-events: none; }
         
-        /* LAYER SYSTEM */
-        .layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        /* INTERACTIVE ELEMENTS */
+        .layer { position: absolute; inset: 0; }
         .z-back { z-index: 1; }
-        .z-front { z-index: 4; } 
+        .z-front { z-index: 5; }
 
-        .user-img { position: absolute; transform-origin: center; left: 50%; top: 50%; display: none; }
-        .text-el { position: absolute; width: 100%; text-align: center; color: black; font-weight: 700; transform-origin: center; }
-
-        /* MODAL EXPORT */
-        #export-modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-            display: none; justify-content: center; align-items: center; z-index: 10000; 
+        /* Draggable Element Box */
+        .editable {
+            position: absolute; cursor: move; border: 2px transparent dashed;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: all !important;
         }
-        .export-box { background: var(--card); padding: 30px; border-radius: 20px; width: 350px; border: 1px solid #475569; }
-        .export-box h2 { margin-top: 0; color: var(--primary); }
-        .export-box select, .export-box input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #0f172a; color: white; border: 1px solid #475569; box-sizing: border-box; }
+        .editable:hover, .editable.active { border-color: var(--primary); }
 
-        /* UI ELEMENTS */
-        .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #475569; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; }
-        .btn-add { background: var(--accent); color: white; }
+        .user-image { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; }
+
+        /* CONTROLS HANDLES */
+        .handle { 
+            position: absolute; width: 12px; height: 12px; background: white; 
+            border: 2px solid var(--primary); border-radius: 50%; display: none;
+        }
+        .editable.active .handle { display: block; }
+        .h-resizer { right: -6px; bottom: -6px; cursor: nwse-resize; }
+        .h-rotator { top: -25px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); }
+
+        /* EXPORT MODAL */
+        #export-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .export-box { background: var(--card); padding: 30px; border-radius: 15px; width: 300px; text-align: center; }
+
+        /* UI */
+        .control-group { background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #334155; }
+        textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 5px; padding: 8px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
     </style>
 </head>
 <body>
 
 <div id="export-modal">
     <div class="export-box">
-        <h2>EXPORT DESIGN</h2>
-        <label>Pilih Format</label>
-        <select id="export-format">
-            <option value="pdf">Dokumen PDF (High Quality)</option>
-            <option value="png">Gambar PNG (ZIP/Batch)</option>
-        </select>
-        
-        <label>Pilih Halaman</label>
-        <select id="export-range" onchange="toggleRangeInput()">
-            <option value="all">Semua Halaman</option>
-            <option value="single">Halaman Tertentu</option>
-        </select>
-        <input type="number" id="specific-page" placeholder="Nomor Halaman (Contoh: 1)" style="display:none" min="1">
-
-        <button class="btn btn-main" onclick="processExport()">MULAI DOWNLOAD</button>
-        <button class="btn" style="background:#ef4444; color:white" onclick="closeExport()">BATAL</button>
+        <h3>PILIH FORMAT</h3>
+        <button class="btn" style="background:var(--primary)" onclick="processExport('pdf')">PDF (High Quality)</button>
+        <button class="btn" style="background:var(--accent)" onclick="processExport('png')">PNG (Batch)</button>
+        <button class="btn" style="background:#ef4444" onclick="closeExport()">BATAL</button>
     </div>
 </div>
 
-<div id="main-app" style="width:100%; display: flex;">
-    <div class="sidebar">
-        <h2 style="text-align:center; color:var(--primary);">DESIGN PANEL</h2>
-        
+<div class="sidebar">
+    <h2 style="text-align:center; color:var(--primary)">REAL-TIME EDITOR</h2>
+    <p style="font-size: 11px; color: #94a3b8; text-align: center;">Klik & Geser elemen di kanan untuk memindahkan, menarik sudut untuk zoom, dan titik hijau untuk rotasi.</p>
+    
+    <div id="sidebar-controls">
         <div class="control-group">
-            <h3>PAGE 1 (COVER)</h3>
-            <textarea oninput="updateText('v-p1-t', this.value)">HEADLINE BERITA</textarea>
-            <input type="file" onchange="upload(this, 'v-p1-i1')">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
-                <input type="range" id="x-p1i1" min="-500" max="500" value="0" oninput="sync('img', 'v-p1-i1', 'p1i1')">
-                <input type="range" id="z-p1i1" min="10" max="400" value="100" oninput="sync('img', 'v-p1-i1', 'p1i1')">
-            </div>
+            <h3>PAGE 1</h3>
+            <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA</textarea>
+            <label>Ganti Background</label>
+            <input type="file" onchange="uploadToElement(this, 'img-p1')">
         </div>
-
-        <div id="dynamic-controls"></div>
-
-        <button class="btn btn-add" onclick="addPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn btn-main" onclick="openExport()">EXPORT DESIGN</button>
     </div>
 
-    <div class="preview-container" id="preview-list">
-        <div class="preview-zoom">
-            <div class="page-wrapper" id="page-1">
-                <div class="layer z-back"><img id="v-p1-i1" class="user-img" style="width:100%"></div>
-                <img src="template/news1.png" class="template-frame">
-                <div class="layer z-front">
-                    <div id="v-p1-t" class="text-el" style="top:50%; font-size:35px;">HEADLINE BERITA</div>
-                </div>
+    <button class="btn" style="background:var(--accent)" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
+    <button class="btn" style="background:var(--primary)" onclick="openExport()">EXPORT DESIGN</button>
+</div>
+
+<div class="preview-container" id="preview-list">
+    <div class="page-wrapper" id="page-1">
+        <div class="layer z-back">
+            <div class="editable active" id="box-img-p1" style="width: 500px; height: 500px; left: 0; top: 0;">
+                <img id="img-p1" class="user-image" src="">
+                <div class="handle h-resizer"></div>
+                <div class="handle h-rotator"></div>
+            </div>
+        </div>
+        <img src="template/news1.png" class="template-frame">
+        <div class="layer z-front">
+            <div class="editable" id="box-txt-p1" style="width: 400px; left: 50px; top: 250px;">
+                <div id="txt-p1" class="text-element" style="font-size: 40px;">HEADLINE BERITA</div>
+                <div class="handle h-resizer"></div>
+                <div class="handle h-rotator"></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let pages = 1;
+    let pageCount = 1;
+    let activeEl = null;
+    let isDragging = false, isResizing = false, isRotating = false;
+    let startX, startY, startW, startH, startAngle;
 
-    function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
-    function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
-    
-    function toggleRangeInput() {
-        const val = document.getElementById('export-range').value;
-        document.getElementById('specific-page').style.display = (val === 'single') ? 'block' : 'none';
+    // --- INTERACTIVE ENGINE ---
+    function initInteract(el) {
+        el.addEventListener('mousedown', (e) => {
+            // Hilangkan status aktif dari elemen lain
+            document.querySelectorAll('.editable').forEach(box => box.classList.remove('active'));
+            el.classList.add('active');
+            activeEl = el;
+
+            const handle = e.target;
+            const rect = el.getBoundingClientRect();
+
+            if (handle.classList.contains('h-resizer')) {
+                isResizing = true;
+            } else if (handle.classList.contains('h-rotator')) {
+                isRotating = true;
+                const center = getCenter(el);
+                startAngle = Math.atan2(e.clientY - center.y, e.clientX - center.x) - getRotation(el);
+            } else {
+                isDragging = true;
+                startX = e.clientX - el.offsetLeft;
+                startY = e.clientY - el.offsetTop;
+            }
+            e.stopPropagation();
+        });
     }
 
-    async function processExport() {
-        const format = document.getElementById('export-format').value;
-        const range = document.getElementById('export-range').value;
-        const specific = parseInt(document.getElementById('specific-page').value);
+    document.addEventListener('mousemove', (e) => {
+        if (!activeEl) return;
+
+        if (isDragging) {
+            activeEl.style.left = (e.clientX - startX) + 'px';
+            activeEl.style.top = (e.clientY - startY) + 'px';
+        } 
+        else if (isResizing) {
+            const rect = activeEl.getBoundingClientRect();
+            activeEl.style.width = (e.clientX - rect.left) + 'px';
+            // Jika itu teks, biarkan height auto, jika gambar bisa set height
+            if(activeEl.querySelector('img')) activeEl.style.height = (e.clientY - rect.top) + 'px';
+        }
+        else if (isRotating) {
+            const center = getCenter(activeEl);
+            const angle = Math.atan2(e.clientY - center.y, e.clientX - center.x);
+            const rotation = (angle - startAngle) * (180 / Math.PI);
+            activeEl.style.transform = `rotate(${rotation}deg)`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = isResizing = isRotating = false;
+    });
+
+    function getCenter(el) {
+        const rect = el.getBoundingClientRect();
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    }
+
+    function getRotation(el) {
+        const st = window.getComputedStyle(el, null);
+        const tr = st.getPropertyValue("transform");
+        if (tr === "none") return 0;
+        const values = tr.split('(')[1].split(')')[0].split(',');
+        return Math.atan2(values[1], values[0]);
+    }
+
+    // --- LOGIC EDITOR ---
+    function uploadToElement(input, targetImgId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById(targetImgId);
+                img.src = e.target.result;
+                img.parentElement.style.display = "flex";
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function updateLiveText(id, val) { document.getElementById(id).innerText = val; }
+
+    function addNewPage() {
+        pageCount++;
+        const p = pageCount;
+        const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
+
+        // Sidebar
+        const ctrl = document.createElement('div');
+        ctrl.className = 'control-group';
+        ctrl.innerHTML = `<h3>PAGE ${p}</h3>
+            <textarea oninput="updateLiveText('txt-p${p}', this.value)" placeholder="Teks hal ${p}"></textarea>
+            <input type="file" onchange="uploadToElement(this, 'img-p${p}')">`;
+        document.getElementById('sidebar-controls').appendChild(ctrl);
+
+        // Preview
+        const wrap = document.createElement('div');
+        wrap.className = 'page-wrapper';
+        wrap.id = `page-${p}`;
+        wrap.innerHTML = `
+            <img src="template/${temp}" class="template-frame">
+            <div class="layer z-front">
+                <div class="editable" id="box-img-p${p}" style="width:200px; height:200px; left:150px; top:200px; display:none;">
+                    <img id="img-p${p}" class="user-image" src="">
+                    <div class="handle h-resizer"></div>
+                    <div class="handle h-rotator"></div>
+                </div>
+                <div class="editable" id="box-txt-p${p}" style="width:300px; left:100px; top:100px;">
+                    <div id="txt-p${p}" class="text-element" style="font-size:20px;">Tulis narasi di sini...</div>
+                    <div class="handle h-resizer"></div>
+                    <div class="handle h-rotator"></div>
+                </div>
+            </div>`;
+        document.getElementById('preview-list').appendChild(wrap);
         
-        const start = (range === 'single' && !isNaN(specific)) ? specific : 1;
-        const end = (range === 'single' && !isNaN(specific)) ? specific : pages;
+        // Init Interaction for new elements
+        initInteract(document.getElementById(`box-img-p${p}`));
+        initInteract(document.getElementById(`box-txt-p${p}`));
+    }
 
-        if (start > pages || start < 1) return alert("Halaman tidak ditemukan!");
+    // --- EXPORT ---
+    function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
+    function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
 
+    async function processExport(format) {
+        // Hilangkan border aktif sebelum capture
+        document.querySelectorAll('.editable').forEach(box => box.classList.remove('active'));
         closeExport();
+        
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
 
-        if (format === 'pdf') {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            for (let i = start; i <= end; i++) {
-                const canvas = await html2canvas(document.getElementById(`page-${i}`), {scale: 2, useCORS: true});
-                if (i > start) pdf.addPage();
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
-            }
-            pdf.save('Export_Design.pdf');
-        } else {
-            for (let i = start; i <= end; i++) {
-                const canvas = await html2canvas(document.getElementById(`page-${i}`), {scale: 2});
+        for(let i=1; i<=pageCount; i++) {
+            const canvas = await html2canvas(document.getElementById(`page-${i}`), { scale: 2, useCORS: true });
+            if (format === 'pdf') {
+                if (i > 1) pdf.addPage();
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
+            } else {
                 const link = document.createElement('a');
-                link.download = `Halaman-${i}.png`;
+                link.download = `Page-${i}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
             }
         }
+        if (format === 'pdf') pdf.save('Sakatimes_Design.pdf');
     }
 
-    // Fungsi Add Page, Sync, Upload tetap sama seperti sebelumnya
-    function addPage() {
-        pages++;
-        const p = pages;
-        const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
-        const div = document.createElement('div');
-        div.className = 'control-group';
-        div.innerHTML = `<h3>PAGE ${p}</h3><textarea oninput="updateText('v-p${p}-t', this.value)"></textarea>
-            <input type="file" onchange="upload(this, 'v-p${p}-i1')">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;"><input type="range" id="x-p${p}i1" oninput="sync('img','v-p${p}-i1','p${p}i1')"><input type="range" id="z-p${p}i1" oninput="sync('img','v-p${p}-i1','p${p}i1')"></div>`;
-        document.getElementById('dynamic-controls').appendChild(div);
-
-        const pvw = document.createElement('div');
-        pvw.className = 'preview-zoom';
-        pvw.innerHTML = `<div class="page-wrapper" id="page-${p}"><img src="template/${temp}" class="template-frame"><div class="layer z-front"><img id="v-p${p}-i1" class="user-img" style="width:50%"><div id="v-p${p}-t" class="text-el" style="top:120px; font-size:16px;">Teks Halaman ${p}</div></div></div>`;
-        document.getElementById('preview-list').appendChild(pvw);
-    }
-
-    function sync(type, elId, pref) {
-        const el = document.getElementById(elId);
-        const x = document.getElementById(`x-${pref}`)?.value || 0;
-        const z = (document.getElementById(`z-${pref}`)?.value || 100) / 100;
-        if(el) el.style.transform = `translate(-50%, -50%) translate(${x}px, 0px) scale(${z})`;
-    }
-
-    function upload(input, targetId) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => { const img = document.getElementById(targetId); img.src = e.target.result; img.style.display = "block"; };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-    function updateText(id, val) { document.getElementById(id).innerText = val; }
+    // Init Page 1
+    initInteract(document.getElementById('box-img-p1'));
+    initInteract(document.getElementById('box-txt-p1'));
 </script>
+
 </body>
 </html>
