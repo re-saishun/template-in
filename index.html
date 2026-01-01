@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMPLATE-IN Pro | HQ Editor</title>
+    <title>TEMPLATE-IN EDITOR</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,110 +11,96 @@
         :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --accent: #10b981; }
         body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
-        /* MODAL SYSTEM (Auth & Export) */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); 
-            backdrop-filter: blur(15px); display: flex; justify-content: center; 
-            align-items: center; z-index: 10000;
-        }
-        .modal-content { background: var(--card); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; border: 1px solid #334155; }
-        .modal-content select, .modal-content input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        
-        /* SIDEBAR */
+        /* SIDEBAR TETAP SESUAI PERMINTAAN */
         .sidebar { 
             width: 380px; background: #111827; padding: 20px; overflow-y: auto; 
-            border-right: 1px solid #334155; height: 100vh; box-sizing: border-box;
-            transition: 0.3s;
+            border-right: 1px solid #334155; height: 100vh; z-index: 1000; box-sizing: border-box;
         }
 
-        /* PREVIEW - TRUE SIZE LOGIC */
+        /* PREVIEW CONTAINER (Dikecilkan proporsinya agar enak dilihat) */
         .preview-container { 
             flex: 1; padding: 40px; overflow-y: auto; display: flex; 
             flex-direction: column; align-items: center; gap: 50px; background: #1e293b;
         }
+
+        /* Wrapper untuk menskala tampilan tanpa merusak ukuran asli gambar */
+        .page-scaler {
+            transform: scale(0.6); /* Mengecilkan tampilan preview di layar agar tidak penuh */
+            transform-origin: top center;
+            margin-bottom: -300px; /* Kompensasi ruang kosong akibat scale */
+        }
+
         .page-wrapper { 
             position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); 
-            background: white; line-height: 0; display: inline-block;
+            background: white; line-height: 0; display: inline-block; 
         }
-        /* Mengikuti ukuran asli gambar */
-        .template-frame { 
-            position: relative; z-index: 5; display: block;
-            height: auto; width: auto; max-width: 1000px; /* Limit agar tidak meledak di layar kecil */
-        }
+
+        .template-frame { position: relative; z-index: 5; pointer-events: none; display: block; }
         
-        .layer { position: absolute; inset: 0; pointer-events: none; }
-        .user-image { position: absolute; transform-origin: center; left: 50%; top: 50%; display: none; }
+        /* Layering */
+        .layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .user-image { position: absolute; transform-origin: center; left: 50%; top: 50%; display: none; z-index: 2; }
         .text-element { 
             position: absolute; width: 100%; text-align: center; z-index: 6; 
             color: black; font-weight: 700; transform-origin: center; pointer-events: none;
-            line-height: 1.2;
+            word-wrap: break-word; line-height: 1.2;
         }
 
+        /* UI Elements */
         .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #475569; }
-        .grid-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
-        
+        h3 { margin: 0 0 10px 0; font-size: 14px; color: var(--primary); text-transform: uppercase; }
+        label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
+        .grid-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+        textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 5px; padding: 8px; font-family: inherit; resize: none; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-add { background: var(--accent); color: white; }
         .btn-export { background: var(--primary); color: white; }
-        .btn-close { background: #ef4444; color: white; margin-top: 20px; }
 
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; left: -380px; z-index: 1001; }
-            .sidebar.active { left: 0; }
-        }
+        #auth-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.98); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .modal { background: var(--card); padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="auth-overlay" class="modal-overlay">
-    <div class="modal-content">
-        <h2>TEMPLATE-IN</h2>
+<div id="auth-overlay">
+    <div class="modal">
+        <h2>LOGIN SYSTEM</h2>
         <select id="auth-category"><option value="NEWS">NEWS</option></select>
         <input type="password" id="auth-code" placeholder="KODE AKSES">
         <button class="btn btn-export" onclick="checkAccess()">BUKA EDITOR</button>
     </div>
 </div>
 
-<div id="export-overlay" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <h2 id="export-title">PILIH HALAMAN</h2>
-        <select id="export-select"></select>
-        <button class="btn btn-export" onclick="processExport()">MULAI DOWNLOAD</button>
-        <button class="btn btn-close" onclick="closeExport()">BATAL</button>
-    </div>
-</div>
-
 <div id="main-app" style="display: none; width: 100%;">
-    <div class="sidebar" id="sidebar">
-        <h2 style="text-align:center; color:var(--primary);">EDITOR PANEL</h2>
+    <div class="sidebar">
+        <h2 style="text-align:center; color:var(--primary);">Sakatimes Pro</h2>
         <div id="sidebar-controls">
             <div class="control-group">
                 <h3>PAGE 1 (COVER)</h3>
-                <textarea id="in-h1-text" oninput="updateText('view-h1-text', this.value)" style="width:100%">HEADLINE BERITA</textarea>
+                <textarea oninput="updateText('v-p1-t', this.value)">HEADLINE BERITA</textarea>
                 <div class="grid-ctrl">
-                    <div><label>X</label><input type="range" id="tx-h1" min="-800" max="800" value="0" oninput="sync('text', 'view-h1-text', 'h1')"></div>
-                    <div><label>Y</label><input type="range" id="ty-h1" min="-800" max="800" value="0" oninput="sync('text', 'view-h1-text', 'h1')"></div>
+                    <div><label>X</label><input type="range" id="tx-p1" min="-600" max="600" value="0" oninput="sync('text', 'v-p1-t', 'p1')"></div>
+                    <div><label>Y</label><input type="range" id="ty-p1" min="-600" max="600" value="100" oninput="sync('text', 'v-p1-t', 'p1')"></div>
                 </div>
-                <label>Background</label>
-                <input type="file" onchange="loadFile(this, 'view-h1-bg')">
+                <label>Gambar Utama</label>
+                <input type="file" onchange="loadFile(this, 'v-p1-i1')">
                 <div class="grid-ctrl">
-                    <div><label>Size</label><input type="range" id="z-h1" min="10" max="500" value="100" oninput="sync('img', 'view-h1-bg', 'h1')"></div>
-                    <div><label>X</label><input type="range" id="x-h1" min="-1000" max="1000" value="0" oninput="sync('img', 'view-h1-bg', 'h1')"></div>
+                    <div><label>Size</label><input type="range" id="z-p1i1" min="10" max="400" value="100" oninput="sync('img', 'v-p1-i1', 'p1i1')"></div>
+                    <div><label>X</label><input type="range" id="x-p1i1" min="-800" max="800" value="0" oninput="sync('img', 'v-p1-i1', 'p1i1')"></div>
                 </div>
             </div>
             <div id="extra-controls"></div>
         </div>
         <button class="btn btn-add" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn btn-export" onclick="openExport('pdf')">EXPORT PDF</button>
-        <button class="btn btn-export" style="background:#6366f1" onclick="openExport('png')">EXPORT PNG</button>
+        <button class="btn btn-export" onclick="exportPDF()">DOWNLOAD PDF</button>
     </div>
 
     <div class="preview-container" id="preview-list">
-        <div class="page-wrapper" id="page-1">
-            <div class="layer"><img id="view-h1-bg" class="user-image"></div>
-            <img src="template/news1.png" class="template-frame" id="frame-1" onload="adjustLayer(1)">
-            <div class="layer">
-                <div id="view-h1-text" class="text-element" style="top:50%; font-size:40px;">HEADLINE BERITA</div>
+        <div class="page-scaler">
+            <div class="page-wrapper" id="page-1">
+                <div class="layer"><img id="v-p1-i1" class="user-image" style="width:100%"></div>
+                <img src="template/news1.png" class="template-frame">
+                <div class="layer"><div id="v-p1-t" class="text-element" style="top:50%; font-size:40px;">HEADLINE BERITA</div></div>
             </div>
         </div>
     </div>
@@ -122,19 +108,19 @@
 
 <script>
     let pageCount = 1;
-    let currentExportType = '';
 
     function checkAccess() {
-        // Logic akses dari config.json diasumsikan oke
         document.getElementById('auth-overlay').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
-        addNewPage(); // Hal 2
-        addNewPage(); // Hal 3
+        addNewPage(); // Auto page 2
+        addNewPage(); // Auto page 3
     }
 
+    // FUNGSI UTAMA SINKRONISASI
     function sync(type, elId, pref) {
         const el = document.getElementById(elId);
         if(!el) return;
+
         if(type === 'text') {
             const x = document.getElementById(`tx-${pref}`).value;
             const y = document.getElementById(`ty-${pref}`).value;
@@ -166,73 +152,61 @@
         const pNum = pageCount;
         const template = (pNum % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
 
+        // 1. TAMBAH KONTROL SIDEBAR
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
-        ctrl.innerHTML = `<h3>PAGE ${pNum}</h3>
-            <textarea oninput="updateText('view-p${pNum}-t', this.value)" placeholder="Narasi..."></textarea>
+        ctrl.innerHTML = `
+            <h3>PAGE ${pNum}</h3>
+            <textarea oninput="updateText('v-p${pNum}-t', this.value)" placeholder="Teks Halaman ${pNum}"></textarea>
             <div class="grid-ctrl">
-                <div><label>TX</label><input type="range" id="tx-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'view-p${pNum}-t', 'p${pNum}')"></div>
-                <div><label>TY</label><input type="range" id="ty-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'view-p${pNum}-t', 'p${pNum}')"></div>
+                <div><label>TX</label><input type="range" id="tx-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'v-p${pNum}-t', 'p${pNum}')"></div>
+                <div><label>TY</label><input type="range" id="ty-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'v-p${pNum}-t', 'p${pNum}')"></div>
             </div>
-            <input type="file" onchange="loadFile(this, 'view-p${pNum}-i')">
+            
+            <label>Gambar A</label>
+            <input type="file" onchange="loadFile(this, 'v-p${pNum}-i1')">
             <div class="grid-ctrl">
-                <div><label>Size</label><input type="range" id="z-p${pNum}" min="10" max="300" value="100" oninput="sync('img', 'view-p${pNum}-i', 'p${pNum}')"></div>
-                <div><label>X</label><input type="range" id="x-p${pNum}" min="-500" max="500" value="0" oninput="sync('img', 'view-p${pNum}-i', 'p${pNum}')"></div>
-            </div>`;
+                <div><label>X</label><input type="range" id="x-p${pNum}i1" min="-600" max="600" value="0" oninput="sync('img', 'v-p${pNum}-i1', 'p${pNum}i1')"></div>
+                <div><label>Size</label><input type="range" id="z-p${pNum}i1" min="10" max="300" value="100" oninput="sync('img', 'v-p${pNum}-i1', 'p${pNum}i1')"></div>
+            </div>
+
+            <label>Gambar B</label>
+            <input type="file" onchange="loadFile(this, 'v-p${pNum}-i2')">
+            <div class="grid-ctrl">
+                <div><label>X</label><input type="range" id="x-p${pNum}i2" min="-600" max="600" value="0" oninput="sync('img', 'v-p${pNum}-i2', 'p${pNum}i2')"></div>
+                <div><label>Size</label><input type="range" id="z-p${pNum}i2" min="10" max="300" value="100" oninput="sync('img', 'v-p${pNum}-i2', 'p${pNum}i2')"></div>
+            </div>
+        `;
         document.getElementById('extra-controls').appendChild(ctrl);
 
-        const wrap = document.createElement('div');
-        wrap.className = 'page-wrapper';
-        wrap.id = `page-${pNum}`;
-        wrap.innerHTML = `<img src="template/${template}" class="template-frame" id="frame-${pNum}">
-            <div class="layer">
-                <div id="view-p${pNum}-t" class="text-element" style="top:20%; color:black; font-size:18px; padding:40px;"></div>
-                <img id="view-p${pNum}-i" class="user-image" style="width:50%">
-            </div>`;
-        document.getElementById('preview-list').appendChild(wrap);
+        // 2. TAMBAH PREVIEW CANVAS
+        const scaler = document.createElement('div');
+        scaler.className = 'page-scaler';
+        scaler.innerHTML = `
+            <div class="page-wrapper" id="page-${pNum}">
+                <img src="template/${template}" class="template-frame">
+                <div class="layer">
+                    <img id="v-p${pNum}-i1" class="user-image" style="width:40%">
+                    <img id="v-p${pNum}-i2" class="user-image" style="width:40%">
+                </div>
+                <div class="layer">
+                    <div id="v-p${pNum}-t" class="text-element" style="top:150px; font-size:18px; color:black; padding:0 40px;"></div>
+                </div>
+            </div>
+        `;
+        document.getElementById('preview-list').appendChild(scaler);
     }
 
-    // EXPORT SYSTEM
-    function openExport(type) {
-        currentExportType = type;
-        const modal = document.getElementById('export-overlay');
-        const select = document.getElementById('export-select');
-        document.getElementById('export-title').innerText = `EXPORT ${type.toUpperCase()}`;
-        
-        select.innerHTML = '<option value="all">SEMUA HALAMAN (BATCH)</option>';
+    async function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
         for(let i=1; i<=pageCount; i++) {
-            select.innerHTML += `<option value="${i}">HANYA HALAMAN ${i}</option>`;
+            const el = document.getElementById(`page-${i}`);
+            const canvas = await html2canvas(el, {scale: 2, useCORS: true});
+            if(i > 1) pdf.addPage();
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
         }
-        modal.style.display = 'flex';
-    }
-
-    function closeExport() { document.getElementById('export-overlay').style.display = 'none'; }
-
-    async function processExport() {
-        const choice = document.getElementById('export-select').value;
-        closeExport();
-        
-        if (currentExportType === 'pdf') {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pages = (choice === 'all') ? Array.from({length: pageCount}, (_, i) => i + 1) : [parseInt(choice)];
-            
-            for(let i=0; i < pages.length; i++) {
-                const canvas = await html2canvas(document.getElementById(`page-${pages[i]}`), {scale: 2});
-                if(i > 0) pdf.addPage();
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
-            }
-            pdf.save(`Sakatimes_${choice}.pdf`);
-        } else {
-            const pages = (choice === 'all') ? Array.from({length: pageCount}, (_, i) => i + 1) : [parseInt(choice)];
-            for(let p of pages) {
-                const canvas = await html2canvas(document.getElementById(`page-${p}`), {scale: 2});
-                const link = document.createElement('a');
-                link.download = `Sakatimes_Page_${p}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-            }
-        }
+        pdf.save('Sakatimes_HQ.pdf');
     }
 </script>
 </body>
