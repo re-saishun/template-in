@@ -1,42 +1,236 @@
-<div class="container">
-  <div class="sidebar">
-    <h3>Input Konten</h3>
-    <input type="text" id="input-headline" placeholder="Headline Berita">
-    <input type="file" id="input-img-1" accept="image/*">
-    <input type="file" id="input-img-pages" accept="image/*"> <textarea id="input-text-optional" placeholder="Teks tambahan (opsional)"></textarea>
-  </div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Template Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-dark: #1e293b;
+            --sidebar-width: 350px;
+        }
 
-  <div class="preview-area">
-    <div id="page-1" class="page">
-        <h1 id="view-headline">Headline Disini</h1>
-        <div id="view-img-1" class="image-placeholder"></div>
+        body {
+            margin: 0;
+            font-family: 'League Spartan', sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #0f172a;
+            color: white;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-dark);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #334155;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.3);
+        }
+
+        .sidebar h2 { color: #60a5fa; margin-bottom: 20px; }
+
+        .control-group {
+            background: #334155;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; }
+        input[type="text"], textarea, input[type="file"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .range-slider { width: 100%; margin-top: 5px; }
+
+        /* Preview Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 40px;
+            gap: 30px;
+            background-image: radial-gradient(#334155 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+        }
+
+        /* Canvas Style (Halaman) */
+        .page-canvas {
+            width: 400px;
+            height: 550px;
+            background-color: white;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+            color: black;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* Elemen di dalam Canvas */
+        .headline-text {
+            position: absolute;
+            bottom: 50px;
+            left: 20px;
+            right: 20px;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            text-transform: uppercase;
+            cursor: move;
+        }
+
+        .attached-img {
+            position: absolute;
+            max-width: 100%;
+            cursor: move;
+            object-fit: contain;
+        }
+
+        .page-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .p2-content {
+            padding: 60px 30px;
+            font-size: 18px;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        
+        button:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>News Editor</h2>
+        
+        <div class="control-group">
+            <label>Pilih Tema</label>
+            <select id="template-select">
+                <option value="news">Kategori: News</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <h3>Halaman 1 (Cover)</h3>
+            <label>Headline Berita</label>
+            <textarea id="in-h1-text" rows="3" placeholder="Masukan judul..."></textarea>
+            
+            <label>Posisi Y Judul</label>
+            <input type="range" id="in-h1-pos" class="range-slider" min="0" max="500" value="450">
+
+            <label>Upload Foto Utama</label>
+            <input type="file" id="in-h1-img" accept="image/*">
+        </div>
+
+        <div class="control-group">
+            <h3>Halaman 2+ (Isi)</h3>
+            <label>Isi Teks Halaman 2</label>
+            <textarea id="in-p2-text" rows="5" placeholder="Tulis berita di sini..."></textarea>
+            
+            <label>Upload Gambar Isi (Maks 2)</label>
+            <input type="file" id="in-p2-img1" accept="image/*">
+            <input type="file" id="in-p2-img2" accept="image/*">
+        </div>
+
+        <button onclick="window.print()">Simpan / Export PDF</button>
     </div>
-    <div id="page-2" class="page dynamic-bg">
-        <p class="optional-text"></p>
+
+    <div class="main-content" id="preview-container">
+        <div class="page-canvas" id="canvas-1" style="background-image: url('template/news1.png')">
+            <div class="page-label">Halaman 1</div>
+            <img id="view-h1-img" class="attached-img" style="top: 100px; width: 80%; left: 10%;">
+            <div id="view-h1-text" class="headline-text">Headline Berita</div>
+        </div>
+
+        <div class="page-canvas" id="canvas-2" style="background-image: url('template/news2.png')">
+            <div class="page-label">Halaman 2</div>
+            <div id="view-p2-text" class="p2-content">Tulis isi berita di sidebar...</div>
+            <img id="view-p2-img1" class="attached-img" style="top: 250px; width: 40%; left: 10%;">
+            <img id="view-p2-img2" class="attached-img" style="top: 250px; width: 40%; left: 55%;">
+        </div>
+
+        <div class="page-canvas" id="canvas-3" style="background-image: url('template/news3.png')">
+            <div class="page-label">Halaman 3</div>
+        </div>
     </div>
-    </div>
-</div>
 
-<script>
-  // Update Teks Real-time
-const inputHeadline = document.getElementById('input-headline');
-const viewHeadline = document.getElementById('view-headline');
+    <script>
+        // Logika Page 1
+        const inH1Text = document.getElementById('in-h1-text');
+        const viewH1Text = document.getElementById('view-h1-text');
+        const inH1Pos = document.getElementById('in-h1-pos');
 
-inputHeadline.addEventListener('input', () => {
-    viewHeadline.innerText = inputHeadline.value;
-});
-
-// Update Gambar Background Halaman 2-7
-const inputImgPages = document.getElementById('input-img-pages');
-const dynamicPages = document.querySelectorAll('.dynamic-bg');
-
-inputImgPages.addEventListener('change', function() {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        dynamicPages.forEach(page => {
-            page.style.backgroundImage = `url(${e.target.result})`;
+        inH1Text.addEventListener('input', () => {
+            viewH1Text.innerText = inH1Text.value || "Headline Berita";
         });
-    }
-    reader.readAsDataURL(this.files[0]);
-});
-</script>
+
+        inH1Pos.addEventListener('input', () => {
+            viewH1Text.style.top = inH1Pos.value + "px";
+            viewH1Text.style.bottom = "auto";
+        });
+
+        // Logika Page 2
+        const inP2Text = document.getElementById('in-p2-text');
+        const viewP2Text = document.getElementById('view-p2-text');
+
+        inP2Text.addEventListener('input', () => {
+            viewP2Text.innerText = inP2Text.value || "Isi berita...";
+        });
+
+        // Logika Upload Gambar (Universal Function)
+        function handleImageUpload(inputEl, targetImgEl) {
+            inputEl.addEventListener('change', function() {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    targetImgEl.src = e.target.result;
+                };
+                if(this.files[0]) reader.readAsDataURL(this.files[0]);
+            });
+        }
+
+        handleImageUpload(document.getElementById('in-h1-img'), document.getElementById('view-h1-img'));
+        handleImageUpload(document.getElementById('in-p2-img1'), document.getElementById('view-p2-img1'));
+        handleImageUpload(document.getElementById('in-p2-img2'), document.getElementById('view-p2-img2'));
+
+        // Otomatisasi Halaman Berikutnya (Page 4, 5, dst)
+        const container = document.getElementById('preview-container');
+        for (let i = 4; i <= 7; i++) {
+            const newPage = document.createElement('div');
+            newPage.className = 'page-canvas';
+            // Page 4 pake news2, Page 5 pake news3 (berulang)
+            const templateNum = (i % 2 === 0) ? 2 : 3;
+            newPage.style.backgroundImage = `url('template/news${templateNum}.png')`;
+            newPage.innerHTML = `<div class="page-label">Halaman ${i}</div>`;
+            container.appendChild(newPage);
+        }
+    </script>
+</body>
+</html>
