@@ -13,43 +13,46 @@
 
         /* AUTH MODAL */
         #auth-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid var(--border); }
         .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
         .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
         /* MAIN APP */
         #main-app { display: none; width: 100%; height: 100vh; flex-direction: row; }
-        .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); box-shadow: 10px 0 30px rgba(0,0,0,0.3); }
-        .preview-container { flex: 1; padding: 60px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #0f172a; background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px; }
+        .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); }
+        .preview-container { flex: 1; padding: 60px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #0f172a; }
 
         /* CANVAS */
         .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; }
         .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }
-        .layer { position: absolute; inset: 0; z-index: 10; }
+        
+        /* Layering Strategy */
+        .layer-behind { position: absolute; inset: 0; z-index: 1; }  /* Khusus P1 */
+        .layer-front { position: absolute; inset: 0; z-index: 10; }   /* P2++ & Teks */
+
         .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
-        .editable.active { border-color: var(--primary); z-index: 20; background: rgba(59, 130, 246, 0.05); }
+        .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+        
         .user-image { width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
-        /* HANDLES */
-        .handle { position: absolute; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; }
+        .handle { position: absolute; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; z-index: 100; }
         .editable.active .handle { display: block; }
         .h-resizer { right: -8px; bottom: -8px; cursor: nwse-resize; }
         .h-rotator { top: -35px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
 
-        /* UI ELEMENTS */
+        /* UI Controls */
         .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
-        label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
+        label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
         textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
-        .btn-main { background: var(--primary); }
     </style>
 </head>
 <body>
 
 <div id="auth-overlay">
     <div class="modal">
-        <h2 style="color:var(--primary); letter-spacing:2px;">TEMPLATE-IN PRO</h2>
+        <h2 style="color:var(--primary)">TEMPLATE-IN PRO</h2>
         <select id="auth-category">
             <option value="">PILIH KATEGORI</option>
             <option value="NEWS">NEWS</option>
@@ -57,39 +60,39 @@
         </select>
         <input type="password" id="auth-code" placeholder="KODE AKSES">
         <button onclick="checkAccess()">LOG IN EDITOR</button>
-        <p id="auth-status" style="font-size: 10px; color: #64748b; margin-top: 15px;">Memuat konfigurasi...</p>
+        <p id="auth-status" style="font-size: 10px; color: #64748b; margin-top: 15px;">Mengecek Konfigurasi...</p>
     </div>
 </div>
 
 <div id="main-app">
     <div class="sidebar">
-        <h2 style="text-align:center; color:var(--primary); font-size: 20px;">EDITOR PANEL</h2>
+        <h2 style="text-align:center; color:var(--primary); font-size: 18px;">EDITOR PANEL</h2>
         <div id="sidebar-controls">
             <div class="control-group">
-                <h3>PAGE 1 (COVER)</h3>
+                <h3 style="font-size:14px; color:var(--accent)">PAGE 1 (COVER)</h3>
                 <label>Headline Utama</label>
                 <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
-                <label>Ganti Background</label>
+                <label>Background (Di Belakang)</label>
                 <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
             </div>
         </div>
         <button class="btn" style="background: var(--accent)" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn btn-main" onclick="openExport()">DOWNLOAD DESAIN</button>
+        <button class="btn" style="background: var(--primary)" onclick="openExport()">DOWNLOAD HASIL</button>
     </div>
 
     <div class="preview-container" id="preview-list">
         <div class="page-wrapper" id="page-1">
-            <img src="template/news1.png" class="template-frame">
-            <div class="layer">
-                <div class="editable active" id="box-img-p1" style="width: 500px; height: 700px; left: 0; top: 0; z-index: 1;">
-                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x707?text=Upload+Foto+Background">
-                    <div class="handle h-resizer"></div>
-                    <div class="handle h-rotator"></div>
+            <div class="layer-behind">
+                <div class="editable active" id="box-img-p1" style="width: 500px; height: 707px; left: 0; top: 0;">
+                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x707?text=Background+P1">
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
-                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px; z-index: 10;">
+            </div>
+            <img src="template/news1.png" class="template-frame">
+            <div class="layer-front">
+                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px;">
                     <div id="txt-p1" class="text-element" style="font-size: 40px; color: black;">HEADLINE BERITA UTAMA</div>
-                    <div class="handle h-resizer"></div>
-                    <div class="handle h-rotator"></div>
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
             </div>
         </div>
@@ -98,8 +101,8 @@
 
 <div id="export-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; justify-content:center; align-items:center;">
     <div style="background:var(--card); padding:30px; border-radius:20px; text-align:center; border: 1px solid var(--border);">
-        <h3>EKSPOR FILE</h3>
-        <button class="btn btn-main" onclick="processExport('pdf')">SIMPAN PDF (A4)</button>
+        <h3>EKSPOR DESAIN</h3>
+        <button class="btn" style="background:var(--primary)" onclick="processExport('pdf')">SIMPAN PDF</button>
         <button class="btn" style="background:#6366f1" onclick="processExport('png')">SIMPAN PNG</button>
         <br><br>
         <button class="btn" style="background:transparent; border:1px solid #ff4444; color:#ff4444" onclick="closeExport()">BATAL</button>
@@ -107,48 +110,25 @@
 </div>
 
 <script>
-    // 1. DATA CONFIG & LOGIN ENGINE
     let configData = { "templates": [] };
     const authStatus = document.getElementById('auth-status');
 
-    // Load dari file, jika gagal gunakan data default
-    fetch('config.json')
-        .then(r => r.json())
-        .then(d => { 
-            configData = d; 
-            authStatus.innerText = "Konfigurasi Cloud Dimuat.";
-        })
-        .catch(err => {
-            console.warn("Gagal memuat config.json, menggunakan data lokal.");
-            configData = {
-                "templates": [
-                    { "category": "NEWS", "code": "sakatimes" },
-                    { "category": "MAJALAH", "code": "kreatif2026" }
-                ]
-            };
-            authStatus.innerText = "Konfigurasi Lokal Siap.";
-        });
+    fetch('config.json').then(r => r.json()).then(d => { configData = d; authStatus.innerText = "Config Loaded."; })
+    .catch(() => {
+        configData = { "templates": [{ "category": "NEWS", "code": "sakatimes" }, { "category": "MAJALAH", "code": "kreatif2026" }] };
+        authStatus.innerText = "Offline Mode.";
+    });
 
     function checkAccess() {
         const cat = document.getElementById('auth-category').value;
         const code = document.getElementById('auth-code').value;
-
-        if (!cat || !code) {
-            alert("Harap pilih kategori dan isi kode!");
-            return;
-        }
-
         const found = configData.templates.find(t => t.category === cat && t.code === code);
-
         if (found) {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-        } else {
-            alert("Kategori atau Kode Akses Salah!");
-        }
+        } else { alert("Kode Akses Salah!"); }
     }
 
-    // 2. IMAGE ENGINE (Anti-Crop & Aspect Ratio)
     function uploadToElement(input, targetImgId, boxId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -156,14 +136,9 @@
                 const img = document.getElementById(targetImgId);
                 const box = document.getElementById(boxId);
                 const tempImg = new Image();
-                
                 tempImg.onload = function() {
-                    const originalWidth = tempImg.width;
-                    const originalHeight = tempImg.height;
-                    const containerWidth = 500; 
-                    const ratioHeight = (originalHeight / originalWidth) * containerWidth;
-                    
-                    box.style.width = containerWidth + 'px';
+                    const ratioHeight = (tempImg.height / tempImg.width) * 500;
+                    box.style.width = '500px';
                     box.style.height = ratioHeight + 'px';
                     img.src = e.target.result;
                     box.style.display = "flex";
@@ -174,9 +149,7 @@
         }
     }
 
-    // 3. INTERACTIVE ENGINE (Dragging, Resizing, Rotating)
-    let activeEl = null;
-    let isDragging = false, isResizing = false, isRotating = false;
+    let activeEl = null, isDragging = false, isResizing = false, isRotating = false;
     let startX, startY, startW, startH, startFontSize, startAngle;
 
     function initInteract(el) {
@@ -191,61 +164,42 @@
         el.classList.add('active');
         activeEl = el;
 
-        const handle = e.target;
-        if (handle.classList.contains('h-resizer')) {
-            isResizing = true;
-            startW = el.offsetWidth;
-            startH = el.offsetHeight;
-            startX = e.clientX;
-            startY = e.clientY;
-            const textEl = el.querySelector('.text-element');
-            if(textEl) startFontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
-        } else if (handle.classList.contains('h-rotator')) {
-            isRotating = true;
-            const center = getCenter(el);
+        if (e.target.classList.contains('h-resizer')) {
+            isResizing = true; startW = el.offsetWidth; startH = el.offsetHeight;
+            startX = e.clientX; startY = e.clientY;
+            const txt = el.querySelector('.text-element');
+            if(txt) startFontSize = parseFloat(window.getComputedStyle(txt).fontSize);
+        } else if (e.target.classList.contains('h-rotator')) {
+            isRotating = true; const center = getCenter(el);
             startAngle = Math.atan2(e.clientY - center.y, e.clientX - center.x) - getRotation(el);
         } else {
-            isDragging = true;
-            startX = e.clientX - el.offsetLeft;
-            startY = e.clientY - el.offsetTop;
+            isDragging = true; startX = e.clientX - el.offsetLeft; startY = e.clientY - el.offsetTop;
         }
     }
 
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('touchmove', (e) => handleMove(e.touches[0]), {passive: false});
-
-    function handleMove(e) {
+    document.addEventListener('mousemove', (e) => {
         if (!activeEl) return;
         if (isDragging) {
             activeEl.style.left = (e.clientX - startX) + 'px';
             activeEl.style.top = (e.clientY - startY) + 'px';
         } else if (isResizing) {
-            const diffX = e.clientX - startX;
-            const newWidth = Math.max(20, startW + diffX);
-            activeEl.style.width = newWidth + 'px';
-            
-            const textEl = activeEl.querySelector('.text-element');
-            if (textEl) {
-                const scale = newWidth / startW;
-                textEl.style.fontSize = (startFontSize * scale) + 'px';
+            const newW = Math.max(20, startW + (e.clientX - startX));
+            activeEl.style.width = newW + 'px';
+            const txt = activeEl.querySelector('.text-element');
+            if (txt) {
+                txt.style.fontSize = (startFontSize * (newW / startW)) + 'px';
             } else {
-                const ratio = startH / startW;
-                activeEl.style.height = (newWidth * ratio) + 'px';
+                activeEl.style.height = (newW * (startH / startW)) + 'px';
             }
         } else if (isRotating) {
             const center = getCenter(activeEl);
             const angle = Math.atan2(e.clientY - center.y, e.clientX - center.x);
             activeEl.style.transform = `rotate(${(angle - startAngle) * (180/Math.PI)}deg)`;
         }
-    }
+    });
 
     document.addEventListener('mouseup', () => isDragging = isResizing = isRotating = false);
-
-    function getCenter(el) {
-        const r = el.getBoundingClientRect();
-        return { x: r.left + r.width/2, y: r.top + r.height/2 };
-    }
-
+    function getCenter(el) { const r = el.getBoundingClientRect(); return { x: r.left + r.width/2, y: r.top + r.height/2 }; }
     function getRotation(el) {
         const st = window.getComputedStyle(el, null);
         const tr = st.getPropertyValue("transform");
@@ -254,46 +208,48 @@
         return Math.atan2(v[1], v[0]);
     }
 
-    // 4. GENERAL FUNCTIONS
-    let pageCount = 1;
     function updateLiveText(id, val) { document.getElementById(id).innerText = val; }
 
+    let pageCount = 1;
     function addNewPage() {
         pageCount++;
         const p = pageCount;
-        const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
+        const temp = (p % 2 === 0) ? 'news2.png' : 'news3.png';
+        
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-            <label>Teks Konten</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
-            <label>Foto Halaman</label><input type="file" onchange="uploadToElement(this, 'img-p${p}', 'box-img-p${p}')">`;
+            <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
+            <label>Foto 1 (Di Atas)</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
+            <label>Foto 2 (Di Atas)</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-2', 'box-img-p${p}-2')">`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
 
         const wrap = document.createElement('div');
         wrap.className = 'page-wrapper'; wrap.id = `page-${p}`;
         wrap.innerHTML = `
             <img src="template/${temp}" class="template-frame">
-            <div class="layer">
-                <div class="editable" id="box-img-p${p}" style="width:200px; height:200px; left:150px; top:200px; display:none; z-index:1;">
-                    <img id="img-p${p}" class="user-image">
+            <div class="layer-front">
+                <div class="editable" id="box-img-p${p}-1" style="width:200px; height:200px; left:20px; top:150px; display:none">
+                    <img id="img-p${p}-1" class="user-image">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
-                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px; z-index:10;">
-                    <div id="txt-p${p}" class="text-element" style="font-size:18px;">Edit teks di sidebar...</div>
+                <div class="editable" id="box-img-p${p}-2" style="width:200px; height:200px; left:250px; top:150px; display:none">
+                    <img id="img-p${p}-2" class="user-image">
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
+                </div>
+                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px;">
+                    <div id="txt-p${p}" class="text-element" style="font-size:22px;">Narasi halaman ${p}...</div>
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
             </div>`;
         document.getElementById('preview-list').appendChild(wrap);
-        initInteract(wrap.querySelector(`#box-img-p${p}`));
+        initInteract(wrap.querySelector(`#box-img-p${p}-1`));
+        initInteract(wrap.querySelector(`#box-img-p${p}-2`));
         initInteract(wrap.querySelector(`#box-txt-p${p}`));
     }
 
-    function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
-    function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
-
     async function processExport(format) {
         document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
-        closeExport();
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         for(let i=1; i<=pageCount; i++) {
@@ -303,15 +259,14 @@
                 pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0, 210, 297);
             } else {
                 const link = document.createElement('a');
-                link.download = `Desain_Halaman_${i}.png`;
+                link.download = `Page_${i}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             }
         }
-        if (format === 'pdf') pdf.save('Sakatimes_Editor_Result.pdf');
+        if (format === 'pdf') pdf.save('Desain_Final.pdf');
     }
 
-    // Inisialisasi awal
     initInteract(document.getElementById('box-img-p1'));
     initInteract(document.getElementById('box-txt-p1'));
 </script>
