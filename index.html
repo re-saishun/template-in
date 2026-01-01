@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMPLATE-IN Pro | Professional Editor</title>
+    <title>TEMPLATE-IN AJA</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -12,127 +12,98 @@
         body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
         /* AUTH MODAL */
-        #auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px);
-            display: flex; justify-content: center; align-items: center; z-index: 9999;
-        }
-        .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .modal h2 { margin-top: 0; letter-spacing: 3px; color: var(--primary); }
-        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; font-size: 15px; }
-        .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        #auth-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid var(--border); }
+        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
 
         /* MAIN APP */
         #main-app { display: none; width: 100%; height: 100vh; flex-direction: row; }
+        .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); }
+        .preview-container { flex: 1; padding: 60px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #0f172a; }
+
+        /* CANVAS */
+        .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+        .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }
         
-        /* SIDEBAR */
-        .sidebar { 
-            width: 360px; background: #111827; padding: 25px; overflow-y: auto; 
-            border-right: 1px solid var(--border); z-index: 1000; box-shadow: 10px 0 30px rgba(0,0,0,0.3);
-        }
-        .sidebar h2 { font-size: 22px; letter-spacing: 2px; margin-bottom: 30px; color: var(--primary); text-align: center; }
-
-        /* PREVIEW CONTAINER */
-        .preview-container { 
-            flex: 1; padding: 60px; overflow-y: auto; display: flex; 
-            flex-direction: column; align-items: center; gap: 60px; background: #0f172a; 
-            background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px;
-        }
-
-        /* CANVAS & INTERACTIVE STYLES */
-        .page-wrapper { position: relative; background: white; line-height: 0; box-shadow: 0 40px 100px rgba(0,0,0,0.6); user-select: none; }
-        .template-frame { position: relative; z-index: 5; width: 500px; pointer-events: none; }
-        .layer { position: absolute; inset: 0; overflow: hidden; }
-        .z-back { z-index: 2; }
-        .z-front { z-index: 10; }
-
-        .editable {
-            position: absolute; cursor: move; border: 1.5px dashed transparent;
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: all !important; transition: border 0.2s;
-        }
-        .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
-
+        /* EDITABLE ELEMENTS */
+        .layer { position: absolute; inset: 0; z-index: 10; } /* Layer interaksi selalu di depan */
+        .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
+        .editable.active { border-color: var(--primary); z-index: 20; }
         .user-image { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
-        /* HANDLES */
-        .handle { position: absolute; width: 14px; height: 14px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; z-index: 100; }
+        /* CONTROLS */
+        .handle { position: absolute; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; }
         .editable.active .handle { display: block; }
-        .h-resizer { right: -7px; bottom: -7px; cursor: nwse-resize; }
-        .h-rotator { top: -30px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
+        .h-resizer { right: -8px; bottom: -8px; cursor: nwse-resize; }
+        .h-rotator { top: -35px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
 
-        /* UI ELEMENTS */
-        .control-group { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 1px solid var(--border); }
-        .control-group h3 { margin: 0 0 15px 0; font-size: 14px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        label { display: block; margin: 15px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
-        textarea { width: 100%; height: 70px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: inherit; resize: none; box-sizing: border-box; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 12px; transition: 0.3s; color: white; }
-        .btn-add { background: var(--card); border: 1px solid var(--accent); color: var(--accent); }
+        /* FORM */
+        .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
+        label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
+        textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
+        input[type="file"] { font-size: 11px; margin-top: 5px; width: 100%; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
+        .btn-add { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
         .btn-main { background: var(--primary); }
-
-        #export-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 5000; }
-        .export-box { background: var(--card); padding: 40px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
 <div id="auth-overlay">
     <div class="modal">
-        <h2>TEMPLATE-IN</h2>
+        <h2 style="color:var(--primary)">TEMPLATE-IN</h2>
         <select id="auth-category">
             <option value="">PILIH KATEGORI</option>
             <option value="NEWS">NEWS</option>
         </select>
-        <input type="password" id="auth-code" placeholder="MASUKKAN KODE">
+        <input type="password" id="auth-code" placeholder="KODE AKSES">
         <button onclick="checkAccess()">LOG IN EDITOR</button>
-    </div>
-</div>
-
-<div id="export-modal">
-    <div class="export-box">
-        <h3 style="color:var(--primary); margin-top:0;">SIMPAN KARYA</h3>
-        <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Pilih format file untuk mendownload</p>
-        <button class="btn btn-main" onclick="processExport('pdf')">DOWNLOAD PDF (A4)</button>
-        <button class="btn" style="background:#6366f1" onclick="processExport('png')">DOWNLOAD PNG (Batch)</button>
-        <button class="btn" style="background:transparent; border:1px solid #ef4444; color:#ef4444;" onclick="closeExport()">BATAL</button>
     </div>
 </div>
 
 <div id="main-app">
     <div class="sidebar">
-        <h2>TEMPLATE-IN <span>PRO</span></h2>
+        <h2 style="text-align:center; font-size:18px">EDITOR PRO</h2>
         <div id="sidebar-controls">
             <div class="control-group">
                 <h3>PAGE 1 (COVER)</h3>
-                <label>Headline Berita</label>
+                <label>Headline</label>
                 <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
                 <label>Foto Background</label>
                 <input type="file" onchange="uploadToElement(this, 'img-p1')">
             </div>
         </div>
         <button class="btn btn-add" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn btn-main" onclick="openExport()">EXPORT SEKARANG</button>
+        <button class="btn btn-main" onclick="openExport()">EXPORT PDF/PNG</button>
     </div>
 
     <div class="preview-container" id="preview-list">
         <div class="page-wrapper" id="page-1">
-            <div class="layer z-back">
-                <div class="editable active" id="box-img-p1" style="width: 500px; height: 600px; left: 0; top: 0;">
-                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x700?text=Upload+Foto">
+            <img src="template/news1.png" class="template-frame">
+            <div class="layer">
+                <div class="editable active" id="box-img-p1" style="width: 500px; height: 700px; left: 0; top: 0; z-index: 1;">
+                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x700?text=Klik+Sini+Lalu+Upload">
                     <div class="handle h-resizer"></div>
                     <div class="handle h-rotator"></div>
                 </div>
-            </div>
-            <img src="template/news1.png" class="template-frame">
-            <div class="layer z-front">
-                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px;">
-                    <div id="txt-p1" class="text-element" style="font-size: 40px; color: black; ">HEADLINE BERITA UTAMA</div>
+                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px; z-index: 10;">
+                    <div id="txt-p1" class="text-element" style="font-size: 40px; color: black;">HEADLINE BERITA UTAMA</div>
                     <div class="handle h-resizer"></div>
                     <div class="handle h-rotator"></div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="export-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:var(--card); padding:30px; border-radius:20px; text-align:center;">
+        <h3>SIMPAN HASIL</h3>
+        <button class="btn btn-main" onclick="processExport('pdf')">Download PDF</button>
+        <button class="btn btn-add" onclick="processExport('png')">Download PNG</button>
+        <button class="btn" style="background:red" onclick="closeExport()">Batal</button>
     </div>
 </div>
 
@@ -141,54 +112,44 @@
     let configData = null;
     let activeEl = null;
     let isDragging = false, isResizing = false, isRotating = false;
-    let startX, startY, startAngle;
+    let startX, startY, startW, startH, startFontSize, startAngle;
 
-    // 1. Memuat Config
-    fetch('config.json')
-        .then(response => response.json())
-        .then(data => { configData = data; })
-        .catch(err => { console.error("Gagal memuat config.json", err); });
+    fetch('config.json').then(r => r.json()).then(d => configData = d);
 
-    // 2. Fungsi Login
     function checkAccess() {
         const cat = document.getElementById('auth-category').value;
         const code = document.getElementById('auth-code').value;
-
-        if (!configData) {
-            alert("Sistem belum siap, tunggu sebentar...");
-            return;
-        }
-
+        if (!configData) return;
         const found = configData.templates.find(t => t.category === cat && t.code === code);
-
         if (found) {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-            // Generate halaman default setelah login
-            addNewPage(); // Hal 2
-            addNewPage(); // Hal 3
-        } else {
-            alert("Kombinasi Kategori & Kode Salah!");
-        }
+        } else { alert("Akses Ditolak!"); }
     }
 
-    // 3. Interactive Engine
     function initInteract(el) {
         el.addEventListener('mousedown', startInteract);
-        el.addEventListener('touchstart', (e) => startInteract(e.touches[0]));
+        el.addEventListener('touchstart', (e) => startInteract(e.touches[0]), {passive: false});
     }
 
     function startInteract(e) {
-        document.querySelectorAll('.editable').forEach(box => box.classList.remove('active'));
         const el = e.target.closest('.editable');
         if (!el) return;
 
+        document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         activeEl = el;
 
         const handle = e.target;
         if (handle.classList.contains('h-resizer')) {
             isResizing = true;
+            startW = el.offsetWidth;
+            startH = el.offsetHeight;
+            startX = e.clientX;
+            startY = e.clientY;
+            // Ambil font size awal jika elemen berisi teks
+            const textEl = el.querySelector('.text-element');
+            if(textEl) startFontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
         } else if (handle.classList.contains('h-rotator')) {
             isRotating = true;
             const center = getCenter(el);
@@ -200,42 +161,54 @@
         }
     }
 
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('touchmove', (e) => handleMove(e.touches[0]));
+    document.addEventListener('mousemove', (e) => handleMove(e));
+    document.addEventListener('touchmove', (e) => handleMove(e.touches[0]), {passive: false});
 
     function handleMove(e) {
         if (!activeEl) return;
+
         if (isDragging) {
             activeEl.style.left = (e.clientX - startX) + 'px';
             activeEl.style.top = (e.clientY - startY) + 'px';
-        } else if (isResizing) {
-            const rect = activeEl.getBoundingClientRect();
-            activeEl.style.width = (e.clientX - rect.left) + 'px';
-            if (activeEl.querySelector('img')) activeEl.style.height = (e.clientY - rect.top) + 'px';
-        } else if (isRotating) {
+        } 
+        else if (isResizing) {
+            const diffX = e.clientX - startX;
+            const newWidth = startW + diffX;
+            activeEl.style.width = newWidth + 'px';
+            
+            const textEl = activeEl.querySelector('.text-element');
+            if (textEl) {
+                // Skala font berdasarkan perubahan lebar kotak
+                const scale = newWidth / startW;
+                textEl.style.fontSize = (startFontSize * scale) + 'px';
+            } else {
+                // Untuk gambar, resize tinggi juga
+                const diffY = e.clientY - startY;
+                activeEl.style.height = (startH + diffY) + 'px';
+            }
+        } 
+        else if (isRotating) {
             const center = getCenter(activeEl);
             const angle = Math.atan2(e.clientY - center.y, e.clientX - center.x);
-            const rotation = (angle - startAngle) * (180 / Math.PI);
-            activeEl.style.transform = `rotate(${rotation}deg)`;
+            activeEl.style.transform = `rotate(${(angle - startAngle) * (180/Math.PI)}deg)`;
         }
     }
 
     document.addEventListener('mouseup', () => isDragging = isResizing = isRotating = false);
 
     function getCenter(el) {
-        const rect = el.getBoundingClientRect();
-        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width/2, y: r.top + r.height/2 };
     }
 
     function getRotation(el) {
         const st = window.getComputedStyle(el, null);
         const tr = st.getPropertyValue("transform");
         if (tr === "none") return 0;
-        const values = tr.split('(')[1].split(')')[0].split(',');
-        return Math.atan2(values[1], values[0]);
+        const v = tr.split('(')[1].split(')')[0].split(',');
+        return Math.atan2(v[1], v[0]);
     }
 
-    // 4. Editor Functions
     function uploadToElement(input, targetImgId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -258,8 +231,7 @@
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-            <label>Narasi Teks</label>
-            <textarea oninput="updateLiveText('txt-p${p}', this.value)" placeholder="Tulis narasi..."></textarea>
+            <label>Narasi</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
             <label>Foto 1</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-1')">
             <label>Foto 2</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-2')">`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
@@ -269,32 +241,31 @@
         wrap.id = `page-${p}`;
         wrap.innerHTML = `
             <img src="template/${temp}" class="template-frame">
-            <div class="layer z-front">
-                <div class="editable" id="box-img-p${p}-1" style="width:180px; height:180px; left:50px; top:250px; display:none;">
-                    <img id="img-p${p}-1" class="user-image" src="">
+            <div class="layer">
+                <div class="editable" id="box-img-p${p}-1" style="width:150px; height:150px; left:50px; top:200px; display:none;">
+                    <img id="img-p${p}-1" class="user-image">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
-                <div class="editable" id="box-img-p${p}-2" style="width:180px; height:180px; left:270px; top:250px; display:none;">
-                    <img id="img-p${p}-2" class="user-image" src="">
+                <div class="editable" id="box-img-p${p}-2" style="width:150px; height:150px; left:250px; top:200px; display:none;">
+                    <img id="img-p${p}-2" class="user-image">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
-                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:100px;">
+                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px;">
                     <div id="txt-p${p}" class="text-element" style="font-size:18px;">Narasi berita halaman ${p}...</div>
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
             </div>`;
         document.getElementById('preview-list').appendChild(wrap);
-        
-        initInteract(document.getElementById(`box-img-p${p}-1`));
-        initInteract(document.getElementById(`box-img-p${p}-2`));
-        initInteract(document.getElementById(`box-txt-p${p}`));
+        initInteract(wrap.querySelector(`#box-img-p${p}-1`));
+        initInteract(wrap.querySelector(`#box-img-p${p}-2`));
+        initInteract(wrap.querySelector(`#box-txt-p${p}`));
     }
 
     function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
     function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
 
     async function processExport(format) {
-        document.querySelectorAll('.editable').forEach(box => box.classList.remove('active'));
+        document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
         closeExport();
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -306,18 +277,17 @@
                 pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
             } else {
                 const link = document.createElement('a');
-                link.download = `Sakatimes_Page_${i}.png`;
+                link.download = `Page_${i}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
             }
         }
-        if (format === 'pdf') pdf.save('Sakatimes_Design.pdf');
+        if (format === 'pdf') pdf.save('Sakatimes.pdf');
     }
 
-    // Init Page 1 Elements
+    // Init Page 1
     initInteract(document.getElementById('box-img-p1'));
     initInteract(document.getElementById('box-txt-p1'));
 </script>
-
 </body>
 </html>
