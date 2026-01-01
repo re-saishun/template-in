@@ -1,0 +1,42 @@
+<div class="container">
+  <div class="sidebar">
+    <h3>Input Konten</h3>
+    <input type="text" id="input-headline" placeholder="Headline Berita">
+    <input type="file" id="input-img-1" accept="image/*">
+    <input type="file" id="input-img-pages" accept="image/*"> <textarea id="input-text-optional" placeholder="Teks tambahan (opsional)"></textarea>
+  </div>
+
+  <div class="preview-area">
+    <div id="page-1" class="page">
+        <h1 id="view-headline">Headline Disini</h1>
+        <div id="view-img-1" class="image-placeholder"></div>
+    </div>
+    <div id="page-2" class="page dynamic-bg">
+        <p class="optional-text"></p>
+    </div>
+    </div>
+</div>
+
+<script>
+  // Update Teks Real-time
+const inputHeadline = document.getElementById('input-headline');
+const viewHeadline = document.getElementById('view-headline');
+
+inputHeadline.addEventListener('input', () => {
+    viewHeadline.innerText = inputHeadline.value;
+});
+
+// Update Gambar Background Halaman 2-7
+const inputImgPages = document.getElementById('input-img-pages');
+const dynamicPages = document.querySelectorAll('.dynamic-bg');
+
+inputImgPages.addEventListener('change', function() {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        dynamicPages.forEach(page => {
+            page.style.backgroundImage = `url(${e.target.result})`;
+        });
+    }
+    reader.readAsDataURL(this.files[0]);
+});
+</script>
