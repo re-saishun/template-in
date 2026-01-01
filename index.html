@@ -2,53 +2,85 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>TEMPLATE-IN | Professional Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEMPLATE-IN Pro | Mobile Responsive</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; }
-        body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --accent: #10b981; }
+        body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
         /* AUTH MODAL */
         #auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px);
-            display: flex; justify-content: center; align-items: center; z-index: 9999;
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); 
+            backdrop-filter: blur(20px); display: flex; justify-content: center; 
+            align-items: center; z-index: 10000;
         }
-        .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .modal h2 { margin-top: 0; letter-spacing: 3px; color: var(--primary); }
-        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; font-size: 15px; }
-        .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        .modal button:hover { background: #2563eb; }
+        .modal { background: var(--card); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; border: 1px solid #334155; }
+        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* MAIN APP */
-        #main-app { display: none; width: 100%; height: 100vh; }
-        .sidebar { width: 400px; background: #111827; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; display: flex; flex-direction: column; }
-        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #1e293b; scroll-behavior: smooth; }
+        /* HAMBURGER MENU */
+        .menu-toggle {
+            position: fixed; top: 15px; left: 15px; z-index: 1001;
+            background: var(--primary); color: white; border: none;
+            padding: 10px 15px; border-radius: 8px; cursor: pointer; display: none;
+            font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* SIDEBAR (Responsive) */
+        .sidebar { 
+            width: 380px; background: #111827; padding: 20px; overflow-y: auto; 
+            border-right: 1px solid #334155; height: 100vh; transition: 0.3s ease-in-out;
+            z-index: 1000; box-sizing: border-box;
+        }
+
+        /* PREVIEW CONTAINER */
+        .preview-container { 
+            flex: 1; padding: 40px; overflow-y: auto; display: flex; 
+            flex-direction: column; align-items: center; gap: 50px; background: #1e293b;
+        }
+
+        /* CONTROL ELEMENTS */
+        .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #475569; }
+        h3 { margin: 0 0 10px 0; font-size: 14px; color: var(--primary); text-transform: uppercase; }
+        label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
+        .grid-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+        textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid #475569; border-radius: 5px; padding: 8px; font-family: inherit; }
+
+        /* CANVAS STYLES */
+        .page-wrapper { position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); background: white; line-height: 0; display: inline-block; overflow: hidden; }
+        .template-frame { position: relative; z-index: 5; max-width: 100%; width: 500px; height: auto; pointer-events: none; }
         
-        /* CONTROLS */
-        .control-group { background: var(--card); padding: 18px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #475569; }
-        h3 { margin: 0 0 15px 0; font-size: 14px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
-        label { display: block; margin: 12px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
-        input[type="range"] { width: 100%; margin: 5px 0; }
-        .grid-control { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-top: 5px; }
+        .layer { position: absolute; inset: 0; pointer-events: none; }
+        .user-image { position: absolute; transform-origin: center; left: 50%; top: 50%; display: none; }
+        .text-element { 
+            position: absolute; width: 100%; text-align: center; z-index: 6; 
+            color: black; font-weight: 700; transform-origin: center; pointer-events: none;
+        }
 
-        /* CANVAS */
-        .page-wrapper { position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6); background: white; line-height: 0; display: inline-block; transition: transform 0.3s; }
-        .template-frame { position: relative; z-index: 2; display: block; max-width: 550px; height: auto; pointer-events: none; }
-        .user-bg-layer { position: absolute; top: 0; left: 0; z-index: 1; width: 100%; height: 100%; overflow: hidden; }
-        .transform-layer { position: absolute; transform-origin: center; transition: none; pointer-events: none; }
-        .content-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; line-height: normal; overflow: hidden; }
-        
-        .headline-text { position: absolute; width: 100%; text-align: center; color: black; font-weight: 700; text-transform: uppercase; transform-origin: center; }
+        /* BUTTONS */
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-add { background: var(--accent); color: white; }
+        .btn-export { background: var(--primary); color: white; }
 
-        /* ACTION BUTTONS */
-        .btn-add { background: #10b981; color: white; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; margin-bottom: 15px; font-size: 14px; }
-        .btn-export { background: var(--primary); color: white; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
+        /* MOBILE ADAPTATION */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            .sidebar { 
+                position: fixed; left: -380px; width: 300px; 
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            }
+            .sidebar.active { left: 0; }
+            .preview-container { padding: 60px 10px 20px 10px; }
+            .template-frame { width: 95vw; }
+        }
     </style>
 </head>
 <body>
+
+<button class="menu-toggle" onclick="toggleSidebar()">☰ MENU</button>
 
 <div id="auth-overlay">
     <div class="modal">
@@ -57,174 +89,152 @@
             <option value="">PILIH KATEGORI</option>
             <option value="NEWS">NEWS</option>
         </select>
-        <input type="password" id="auth-code" placeholder="MASUKKAN KODE">
-        <button onclick="checkAccess()">LOG IN EDITOR</button>
+        <input type="password" id="auth-code" placeholder="KODE AKSES">
+        <button onclick="checkAccess()">BUKA EDITOR</button>
     </div>
 </div>
 
-<div id="main-app">
-    <div class="sidebar">
-        <h2 style="text-align:center; color:var(--primary); margin-bottom: 30px;">DESIGN PANEL</h2>
+<div id="main-app" style="display: none; width: 100%;">
+    <div class="sidebar" id="sidebar">
+        <h2 style="text-align:center; color:var(--primary);">Sakatimes Pro</h2>
         
         <div id="sidebar-controls">
             <div class="control-group">
                 <h3>PAGE 1 (COVER)</h3>
-                <label>Headline Teks</label>
-                <textarea id="in-h1-text" oninput="updateText('view-h1-text', this.value)" style="width:100%; height:60px; background:#0f172a; color:white; border:1px solid #475569; padding:8px;">HEADLINE BERITA</textarea>
-                
-                <label>Kontrol Letak Teks</label>
-                <div class="grid-control">
-                    <div><label>X</label><input type="range" id="tx-h1" min="-800" max="800" value="0" oninput="textXform('view-h1-text', 'h1')"></div>
-                    <div><label>Y</label><input type="range" id="ty-h1" min="-800" max="800" value="0" oninput="textXform('view-h1-text', 'h1')"></div>
-                    <div><label>Zoom</label><input type="range" id="tz-h1" min="10" max="400" value="100" oninput="textXform('view-h1-text', 'h1')"></div>
-                    <div><label>Rotasi</label><input type="range" id="tr-h1" min="-180" max="180" value="0" oninput="textXform('view-h1-text', 'h1')"></div>
+                <textarea id="in-h1-text" oninput="updateText('view-h1-text', this.value)">HEADLINE BERITA</textarea>
+                <label>Teks Position</label>
+                <div class="grid-ctrl">
+                    <div><label>X</label><input type="range" id="tx-h1" min="-600" max="600" value="0" oninput="sync('text', 'view-h1-text', 'h1')"></div>
+                    <div><label>Y</label><input type="range" id="ty-h1" min="-600" max="600" value="200" oninput="sync('text', 'view-h1-text', 'h1')"></div>
                 </div>
-
-                <label>Gambar Belakang (PNG Transparent)</label>
-                <input type="file" onchange="updateImage(this, 'view-h1-bg')">
-                <div class="grid-control">
-                    <div><label>X</label><input type="range" id="x-h1" min="-1000" max="1000" value="0" oninput="imgXform('view-h1-bg', 'h1')"></div>
-                    <div><label>Y</label><input type="range" id="y-h1" min="-1000" max="1000" value="0" oninput="imgXform('view-h1-bg', 'h1')"></div>
-                    <div><label>Zoom</label><input type="range" id="z-h1" min="10" max="500" value="100" oninput="imgXform('view-h1-bg', 'h1')"></div>
-                    <div><label>Rotasi</label><input type="range" id="r-h1" min="-180" max="180" value="0" oninput="imgXform('view-h1-bg', 'h1')"></div>
+                <label>Background Image</label>
+                <input type="file" onchange="loadFile(this, 'view-h1-bg')">
+                <div class="grid-ctrl">
+                    <div><label>X</label><input type="range" id="x-h1" min="-800" max="800" value="0" oninput="sync('img', 'view-h1-bg', 'h1')"></div>
+                    <div><label>Y</label><input type="range" id="y-h1" min="-800" max="800" value="0" oninput="sync('img', 'view-h1-bg', 'h1')"></div>
+                    <div><label>Size</label><input type="range" id="z-h1" min="10" max="400" value="100" oninput="sync('img', 'view-h1-bg', 'h1')"></div>
                 </div>
             </div>
 
-            <div id="page-controls-container"></div>
+            <div id="extra-controls"></div>
         </div>
 
-        <button class="btn-add" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn-export" onclick="exportPDF()">DOWNLOAD PDF (A4)</button>
-        <button class="btn-export" style="background:#6366f1" onclick="exportPNG()">DOWNLOAD PNG (ZIP BATCH)</button>
+        <button class="btn btn-add" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
+        <button class="btn btn-export" onclick="exportPDF()">DOWNLOAD PDF</button>
+        <button class="btn btn-export" style="background:#6366f1" onclick="exportPNG()">DOWNLOAD ALL PNG</button>
     </div>
 
     <div class="preview-container" id="preview-list">
         <div class="page-wrapper" id="page-1">
-            <div class="user-bg-layer">
-                <img id="view-h1-bg" class="transform-layer" style="left:50%; top:50%; transform: translate(-50%, -50%);">
+            <div class="layer" style="z-index: 1;">
+                <img id="view-h1-bg" class="user-image" style="width:100%">
             </div>
             <img src="template/news1.png" class="template-frame">
-            <div class="content-layer">
-                <div id="view-h1-text" class="headline-text" style="top:50%; left:0; font-size:40px;">HEADLINE BERITA</div>
+            <div class="layer" style="z-index: 6;">
+                <div id="view-h1-text" class="text-element" style="top:50%; font-size:40px;">HEADLINE BERITA</div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let pageCount = 1; // Mulai dari 1, Page 2 & 3 akan di-generate otomatis
+    let pageCount = 1;
     let configData = null;
 
-    // Load Config dari JSON
+    // Load Access Config
     fetch('config.json')
-        .then(response => response.json())
-        .then(data => configData = data)
-        .catch(err => console.error("Gagal memuat config.json", err));
+        .then(r => r.json()).then(data => configData = data)
+        .catch(() => alert("Error: config.json tidak ditemukan!"));
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
 
     function checkAccess() {
         const cat = document.getElementById('auth-category').value;
         const code = document.getElementById('auth-code').value;
-        
-        const found = configData.templates.find(t => t.category === cat && t.code === code);
+        const found = configData?.templates.find(t => t.category === cat && t.code === code);
         
         if(found) {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-            // Auto generate Page 2 & 3
-            addNewPage(); // Jadi Page 2
-            addNewPage(); // Jadi Page 3
+            addNewPage(); // Auto page 2
+            addNewPage(); // Auto page 3
+        } else { alert("Akses Ditolak!"); }
+    }
+
+    // CORE TRANSFORMATION ENGINE
+    function sync(type, elementId, prefix) {
+        const el = document.getElementById(elementId);
+        if(!el) return;
+
+        if(type === 'text') {
+            const x = document.getElementById(`tx-${prefix}`).value;
+            const y = document.getElementById(`ty-${prefix}`).value;
+            const z = document.getElementById(`tz-${prefix}`)?.value / 100 || 1;
+            el.style.transform = `translate(${x}px, ${y}px) scale(${z})`;
         } else {
-            alert("Kombinasi Kategori & Kode Salah!");
+            const x = document.getElementById(`x-${prefix}`).value;
+            const y = document.getElementById(`y-${prefix}`).value;
+            const z = document.getElementById(`z-${prefix}`).value / 100;
+            const r = document.getElementById(`r-${prefix}`)?.value || 0;
+            el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${z}) rotate(${r}deg)`;
         }
     }
 
-    // Fungsi Transformasi Teks (Pusat di Tengah)
-    function textXform(id, pref) {
-        const x = document.getElementById(`tx-${pref}`).value;
-        const y = document.getElementById(`ty-${pref}`).value;
-        const z = document.getElementById(`tz-${pref}`).value / 100;
-        const r = document.getElementById(`tr-${pref}`).value;
-        const el = document.getElementById(id);
-        if(el) el.style.transform = `translate(${x}px, ${y}px) scale(${z}) rotate(${r}deg)`;
-    }
-
-    // Fungsi Transformasi Gambar (Pusat di Tengah)
-    function imgXform(id, pref) {
-        const x = document.getElementById(`x-${pref}`).value;
-        const y = document.getElementById(`y-${pref}`).value;
-        const z = document.getElementById(`z-${pref}`).value / 100;
-        const r = document.getElementById(`r-${pref}`).value;
-        const img = document.getElementById(id);
-        if(img) img.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${z}) rotate(${r}deg)`;
-    }
-
-    function updateImage(input, targetId) {
+    function loadFile(input, targetId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = (e) => { 
+            reader.onload = (e) => {
                 const img = document.getElementById(targetId);
                 img.src = e.target.result;
-                img.style.left = "50%";
-                img.style.top = "50%";
+                img.style.display = "block";
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function updateText(id, val) { 
-        const el = document.getElementById(id);
-        if(el) el.innerText = val; 
-    }
+    function updateText(id, val) { document.getElementById(id).innerText = val; }
 
     function addNewPage() {
         pageCount++;
         const pNum = pageCount;
         const template = (pNum % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
-        
-        // Buat Control di Sidebar
+
+        // Add Control
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `
             <h3>PAGE ${pNum}</h3>
-            <label>Narasi Teks</label>
-            <textarea id="in-p${pNum}-text" oninput="updateText('view-p${pNum}-text', this.value)" style="width:100%; height:50px; background:#0f172a; color:white; border:1px solid #475569;"></textarea>
-            
-            <div class="grid-control">
-                <div><label>X</label><input type="range" id="tx-p${pNum}" min="-800" max="800" value="0" oninput="textXform('view-p${pNum}-text', 'p${pNum}')"></div>
-                <div><label>Y</label><input type="range" id="ty-p${pNum}" min="-800" max="800" value="0" oninput="textXform('view-p${pNum}-text', 'p${pNum}')"></div>
+            <textarea oninput="updateText('view-p${pNum}-text', this.value)" placeholder="Narasi hal ${pNum}"></textarea>
+            <label>Text Pos</label>
+            <div class="grid-ctrl">
+                <div><label>X</label><input type="range" id="tx-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'view-p${pNum}-text', 'p${pNum}')"></div>
+                <div><label>Y</label><input type="range" id="ty-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'view-p${pNum}-text', 'p${pNum}')"></div>
             </div>
-
             <label>Gambar 1</label>
-            <input type="file" onchange="updateImage(this, 'view-p${pNum}-img1')">
-            <div class="grid-control">
-                <div><label>X</label><input type="range" id="x-p${pNum}i1" min="-1000" max="1000" value="0" oninput="imgXform('view-p${pNum}-img1', 'p${pNum}i1')"></div>
-                <div><label>Y</label><input type="range" id="y-p${pNum}i1" min="-1000" max="1000" value="0" oninput="imgXform('view-p${pNum}-img1', 'p${pNum}i1')"></div>
-                <div><label>Zoom</label><input type="range" id="z-p${pNum}i1" min="10" max="400" value="100" oninput="imgXform('view-p${pNum}-img1', 'p${pNum}i1')"></div>
-            </div>
-
-            <label>Gambar 2</label>
-            <input type="file" onchange="updateImage(this, 'view-p${pNum}-img2')">
-            <div class="grid-control">
-                <div><label>X</label><input type="range" id="x-p${pNum}i2" min="-1000" max="1000" value="0" oninput="imgXform('view-p${pNum}-img2', 'p${pNum}i2')"></div>
-                <div><label>Y</label><input type="range" id="y-p${pNum}i2" min="-1000" max="1000" value="0" oninput="imgXform('view-p${pNum}-img2', 'p${pNum}i2')"></div>
-                <div><label>Zoom</label><input type="range" id="z-p${pNum}i2" min="10" max="400" value="100" oninput="imgXform('view-p${pNum}-img2', 'p${pNum}i2')"></div>
+            <input type="file" onchange="loadFile(this, 'view-p${pNum}-i1')">
+            <div class="grid-ctrl">
+                <div><label>X</label><input type="range" id="x-p${pNum}i1" min="-600" max="600" value="0" oninput="sync('img', 'view-p${pNum}-i1', 'p${pNum}i1')"></div>
+                <div><label>Y</label><input type="range" id="y-p${pNum}i1" min="-600" max="600" value="0" oninput="sync('img', 'view-p${pNum}-i1', 'p${pNum}i1')"></div>
+                <div><label>Size</label><input type="range" id="z-p${pNum}i1" min="10" max="300" value="100" oninput="sync('img', 'view-p${pNum}-i1', 'p${pNum}i1')"></div>
             </div>
         `;
-        document.getElementById('page-controls-container').appendChild(ctrl);
+        document.getElementById('extra-controls').appendChild(ctrl);
 
-        // Buat Preview di Kanan
+        // Add Preview
         const wrap = document.createElement('div');
         wrap.className = 'page-wrapper';
         wrap.id = `page-${pNum}`;
         wrap.innerHTML = `
             <img src="template/${template}" class="template-frame">
-            <div class="content-layer">
-                <div id="view-p${pNum}-text" class="headline-text" style="top:20%; left:0; color:black; font-size:18px; padding:0 40px; text-transform:none;"></div>
-                <img id="view-p${pNum}-img1" class="transform-layer" style="width:30%; left:50%; top:50%;">
-                <img id="view-p${pNum}-img2" class="transform-layer" style="width:30%; left:50%; top:50%;">
+            <div class="layer" style="z-index: 2;">
+                <div id="view-p${pNum}-text" class="text-element" style="top:150px; font-size:20px; color:black; padding:0 30px;"></div>
+                <img id="view-p${pNum}-i1" class="user-image" style="width:40%;">
             </div>
         `;
         document.getElementById('preview-list').appendChild(wrap);
+        if(window.innerWidth < 768) toggleSidebar(); // Close sidebar on mobile after add
     }
 
     async function exportPDF() {
@@ -235,7 +245,7 @@
             if(i > 1) pdf.addPage();
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
         }
-        pdf.save('Design_Result.pdf');
+        pdf.save('Sakatimes_Export.pdf');
     }
 
     async function exportPNG() {
