@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMPLATE-IN AJA</title>
+    <title>TEMPLATE-IN Pro | Professional Editor</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -23,14 +23,16 @@
         .preview-container { flex: 1; padding: 60px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #0f172a; }
 
         /* CANVAS */
-        .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+        .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.5); flex-shrink: 0; }
         .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }
         
         /* EDITABLE ELEMENTS */
-        .layer { position: absolute; inset: 0; z-index: 10; } /* Layer interaksi selalu di depan */
+        .layer { position: absolute; inset: 0; z-index: 10; }
         .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
-        .editable.active { border-color: var(--primary); z-index: 20; }
-        .user-image { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .editable.active { border-color: var(--primary); z-index: 20; background: rgba(59, 130, 246, 0.05); }
+        
+        /* Gambar menyesuaikan box tanpa dipotong */
+        .user-image { width: 100%; height: 100%; object-fit: fill; pointer-events: none; display: block; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
         /* CONTROLS */
@@ -39,13 +41,11 @@
         .h-resizer { right: -8px; bottom: -8px; cursor: nwse-resize; }
         .h-rotator { top: -35px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
 
-        /* FORM */
+        /* UI */
         .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
         label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
         textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
-        input[type="file"] { font-size: 11px; margin-top: 5px; width: 100%; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
-        .btn-add { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
         .btn-main { background: var(--primary); }
     </style>
 </head>
@@ -53,7 +53,7 @@
 
 <div id="auth-overlay">
     <div class="modal">
-        <h2 style="color:var(--primary)">TEMPLATE-IN</h2>
+        <h2 style="color:var(--primary)">TEMPLATE-IN PRO</h2>
         <select id="auth-category">
             <option value="">PILIH KATEGORI</option>
             <option value="NEWS">NEWS</option>
@@ -65,18 +65,18 @@
 
 <div id="main-app">
     <div class="sidebar">
-        <h2 style="text-align:center; font-size:18px">EDITOR PRO</h2>
+        <h2 style="text-align:center; font-size:18px; color:var(--primary)">DASHBOARD EDITOR</h2>
         <div id="sidebar-controls">
             <div class="control-group">
                 <h3>PAGE 1 (COVER)</h3>
-                <label>Headline</label>
+                <label>Headline Utama</label>
                 <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
-                <label>Foto Background</label>
-                <input type="file" onchange="uploadToElement(this, 'img-p1')">
+                <label>Ganti Background</label>
+                <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
             </div>
         </div>
-        <button class="btn btn-add" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn btn-main" onclick="openExport()">EXPORT PDF/PNG</button>
+        <button class="btn" style="background: var(--accent)" onclick="addNewPage()">+ HALAMAN BARU</button>
+        <button class="btn btn-main" onclick="openExport()">DOWNLOAD HASIL</button>
     </div>
 
     <div class="preview-container" id="preview-list">
@@ -84,7 +84,7 @@
             <img src="template/news1.png" class="template-frame">
             <div class="layer">
                 <div class="editable active" id="box-img-p1" style="width: 500px; height: 700px; left: 0; top: 0; z-index: 1;">
-                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x700?text=Klik+Sini+Lalu+Upload">
+                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x700?text=Pilih+Foto+di+Sidebar">
                     <div class="handle h-resizer"></div>
                     <div class="handle h-rotator"></div>
                 </div>
@@ -99,11 +99,12 @@
 </div>
 
 <div id="export-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; justify-content:center; align-items:center;">
-    <div style="background:var(--card); padding:30px; border-radius:20px; text-align:center;">
-        <h3>SIMPAN HASIL</h3>
-        <button class="btn btn-main" onclick="processExport('pdf')">Download PDF</button>
-        <button class="btn btn-add" onclick="processExport('png')">Download PNG</button>
-        <button class="btn" style="background:red" onclick="closeExport()">Batal</button>
+    <div style="background:var(--card); padding:30px; border-radius:20px; text-align:center; border: 1px solid var(--border);">
+        <h3>EKSPOR DESAIN</h3>
+        <button class="btn btn-main" onclick="processExport('pdf')">SIMPAN SEBAGAI PDF</button>
+        <button class="btn" style="background:#6366f1" onclick="processExport('png')">SIMPAN SEBAGAI PNG</button>
+        <br><br>
+        <button class="btn" style="background:transparent; border:1px solid #ff4444; color:#ff4444" onclick="closeExport()">BATAL</button>
     </div>
 </div>
 
@@ -124,7 +125,36 @@
         if (found) {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-        } else { alert("Akses Ditolak!"); }
+        } else { alert("Kode salah!"); }
+    }
+
+    // Fungsi Upload Spesial agar gambar tidak terpotong
+    function uploadToElement(input, targetImgId, boxId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById(targetImgId);
+                const box = document.getElementById(boxId);
+                const tempImg = new Image();
+                
+                tempImg.onload = function() {
+                    // Hitung rasio aspek asli gambar
+                    const originalWidth = tempImg.width;
+                    const originalHeight = tempImg.height;
+                    const containerWidth = 500; // Lebar standar canvas kita
+                    
+                    // Sesuaikan tinggi box agar proporsional dengan lebar (tidak dipotong)
+                    const ratioHeight = (originalHeight / originalWidth) * containerWidth;
+                    
+                    box.style.width = containerWidth + 'px';
+                    box.style.height = ratioHeight + 'px';
+                    img.src = e.target.result;
+                    box.style.display = "flex";
+                };
+                tempImg.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 
     function initInteract(el) {
@@ -135,7 +165,6 @@
     function startInteract(e) {
         const el = e.target.closest('.editable');
         if (!el) return;
-
         document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         activeEl = el;
@@ -147,7 +176,6 @@
             startH = el.offsetHeight;
             startX = e.clientX;
             startY = e.clientY;
-            // Ambil font size awal jika elemen berisi teks
             const textEl = el.querySelector('.text-element');
             if(textEl) startFontSize = parseFloat(window.getComputedStyle(textEl).fontSize);
         } else if (handle.classList.contains('h-rotator')) {
@@ -166,28 +194,24 @@
 
     function handleMove(e) {
         if (!activeEl) return;
-
         if (isDragging) {
             activeEl.style.left = (e.clientX - startX) + 'px';
             activeEl.style.top = (e.clientY - startY) + 'px';
-        } 
-        else if (isResizing) {
+        } else if (isResizing) {
             const diffX = e.clientX - startX;
-            const newWidth = startW + diffX;
+            const newWidth = Math.max(20, startW + diffX);
             activeEl.style.width = newWidth + 'px';
             
             const textEl = activeEl.querySelector('.text-element');
             if (textEl) {
-                // Skala font berdasarkan perubahan lebar kotak
                 const scale = newWidth / startW;
                 textEl.style.fontSize = (startFontSize * scale) + 'px';
             } else {
-                // Untuk gambar, resize tinggi juga
-                const diffY = e.clientY - startY;
-                activeEl.style.height = (startH + diffY) + 'px';
+                // Untuk gambar, kita jaga aspek rasio saat ditarik manual
+                const ratio = startH / startW;
+                activeEl.style.height = (newWidth * ratio) + 'px';
             }
-        } 
-        else if (isRotating) {
+        } else if (isRotating) {
             const center = getCenter(activeEl);
             const angle = Math.atan2(e.clientY - center.y, e.clientX - center.x);
             activeEl.style.transform = `rotate(${(angle - startAngle) * (180/Math.PI)}deg)`;
@@ -209,85 +233,14 @@
         return Math.atan2(v[1], v[0]);
     }
 
-    function uploadToElement(input, targetImgId) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.getElementById(targetImgId);
-                img.src = e.target.result;
-                img.parentElement.style.display = "flex";
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
     function updateLiveText(id, val) { document.getElementById(id).innerText = val; }
 
     function addNewPage() {
         pageCount++;
         const p = pageCount;
         const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
-
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-            <label>Narasi</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
-            <label>Foto 1</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-1')">
-            <label>Foto 2</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-2')">`;
-        document.getElementById('sidebar-controls').appendChild(ctrl);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'page-wrapper';
-        wrap.id = `page-${p}`;
-        wrap.innerHTML = `
-            <img src="template/${temp}" class="template-frame">
-            <div class="layer">
-                <div class="editable" id="box-img-p${p}-1" style="width:150px; height:150px; left:50px; top:200px; display:none;">
-                    <img id="img-p${p}-1" class="user-image">
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-                <div class="editable" id="box-img-p${p}-2" style="width:150px; height:150px; left:250px; top:200px; display:none;">
-                    <img id="img-p${p}-2" class="user-image">
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px;">
-                    <div id="txt-p${p}" class="text-element" style="font-size:18px;">Narasi berita halaman ${p}...</div>
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-            </div>`;
-        document.getElementById('preview-list').appendChild(wrap);
-        initInteract(wrap.querySelector(`#box-img-p${p}-1`));
-        initInteract(wrap.querySelector(`#box-img-p${p}-2`));
-        initInteract(wrap.querySelector(`#box-txt-p${p}`));
-    }
-
-    function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
-    function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
-
-    async function processExport(format) {
-        document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
-        closeExport();
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-
-        for(let i=1; i<=pageCount; i++) {
-            const canvas = await html2canvas(document.getElementById(`page-${i}`), { scale: 2, useCORS: true });
-            if (format === 'pdf') {
-                if (i > 1) pdf.addPage();
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
-            } else {
-                const link = document.createElement('a');
-                link.download = `Page_${i}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-            }
-        }
-        if (format === 'pdf') pdf.save('Sakatimes.pdf');
-    }
-
-    // Init Page 1
-    initInteract(document.getElementById('box-img-p1'));
-    initInteract(document.getElementById('box-txt-p1'));
-</script>
-</body>
-</html>
+            <label>Narasi Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
+            <label>Foto 1</label><input type="file
