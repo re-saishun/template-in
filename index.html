@@ -3,122 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMPLATE-IN | News Editor</title>
+    <title>TEMPLATE-IN</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root {
-            --primary: #3b82f6;
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'League Spartan', sans-serif;
-            display: flex;
-            height: 100vh;
-            background-color: var(--bg-dark);
-            color: white;
-            overflow: hidden;
-        }
+        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; }
+        body { margin: 0; font-family: 'League Spartan', sans-serif; display: flex; height: 100vh; background: var(--bg); color: white; overflow: hidden; }
 
         /* SIDEBAR */
-        .sidebar {
-            width: 380px;
-            background: #111827;
-            padding: 20px;
-            overflow-y: auto;
-            border-right: 1px solid #334155;
-        }
-
-        .sidebar h1 { color: var(--primary); font-size: 24px; letter-spacing: 2px; margin-bottom: 30px; }
-
-        .control-group {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
-        }
-
-        .control-group h3 { font-size: 16px; margin-top: 0; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 8px; }
-
-        label { display: block; margin: 10px 0 5px; font-size: 13px; color: #cbd5e1; }
-        
-        input[type="text"], textarea, input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #475569;
-            background: #0f172a;
-            color: white;
-            font-family: inherit;
-        }
-
-        .slider-box { display: flex; align-items: center; gap: 10px; }
-        input[type="range"] { flex: 1; }
+        .sidebar { width: 360px; background: #111827; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; }
+        .sidebar h1 { color: var(--primary); letter-spacing: 2px; font-size: 24px; text-align: center; }
+        .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+        label { display: block; margin: 10px 0 5px; font-size: 13px; color: #94a3b8; }
+        input, textarea, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; font-family: inherit; box-sizing: border-box; }
 
         /* PREVIEW AREA */
-        .preview-container {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 50px;
-            background: #1e293b;
-        }
+        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 40px; background: #1e293b; }
+        
+        /* Container Halaman Mengikuti Ukuran Gambar */
+        .page-wrapper { position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: inline-block; line-height: 0; }
+        .bg-template { max-width: 500px; height: auto; display: block; } /* Ukuran tampilan di web, saat export akan high-res */
 
-        .canvas {
-            width: 450px; /* Lebar standar preview */
-            aspect-ratio: 3/4; /* Menyesuaikan proporsi umum template news */
-            background-color: white;
-            background-size: contain; /* Agar background image asli tidak terpotong */
-            background-repeat: no-repeat;
-            background-position: center;
-            position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-        }
+        /* Layer Konten Diatas Template */
+        .content-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; line-height: normal; }
+        .headline-text { position: absolute; width: 90%; left: 5%; color: black; font-weight: 700; text-transform: uppercase; }
+        .user-img { position: absolute; transform-origin: center; object-fit: contain; }
 
-        /* ELEMENT STYLES */
-        .headline-text {
-            position: absolute;
-            width: 90%;
-            left: 5%;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: black;
-            line-height: 0.9;
-            pointer-events: none;
-        }
-
-        .user-img {
-            position: absolute;
-            transform-origin: center;
-            object-fit: contain;
-        }
-
-        .page-tag {
-            position: absolute;
-            top: -30px;
-            left: 0;
-            color: #64748b;
-            font-weight: bold;
-        }
-
-        .btn-download {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px;
-            width: 100%;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        button { cursor: pointer; border: none; font-weight: bold; border-radius: 6px; }
+        .btn-export { background: var(--primary); color: white; padding: 12px; width: 100%; margin-top: 10px; }
+        .btn-row { display: flex; gap: 5px; margin-top: 10px; }
+        .btn-row button { flex: 1; padding: 10px; color: white; }
     </style>
 </head>
 <body>
@@ -127,110 +42,136 @@
         <h1>TEMPLATE-IN</h1>
 
         <div class="control-group">
-            <h3>HALAMAN 1 (COVER)</h3>
+            <h3>PENGATURAN COVER (HAL 1)</h3>
             <label>Headline Title</label>
-            <textarea id="in-h1-text" rows="2" placeholder="Masukan Judul Berita"></textarea>
-            
-            <label>Ukuran Font</label>
-            <input type="range" id="in-h1-size" min="10" max="80" value="40">
-
-            <label>Posisi Vertikal Teks</label>
-            <input type="range" id="in-h1-y" min="0" max="100" value="80">
-
-            <label>Upload Gambar Utama</label>
+            <textarea id="in-h1-text" rows="2">HEADLINE BERITA</textarea>
+            <label>Ukuran & Posisi Teks (Y%)</label>
+            <div style="display:flex; gap:5px">
+                <input type="number" id="in-h1-size" value="35">
+                <input type="number" id="in-h1-y" value="75">
+            </div>
+            <label>Upload Gambar & Zoom (%)</label>
             <input type="file" id="in-h1-img">
-            
-            <label>Zoom Gambar (%)</label>
             <input type="range" id="zoom-h1-img" min="10" max="200" value="100">
-            
-            <label>Posisi Y Gambar</label>
-            <input type="range" id="y-h1-img" min="-200" max="200" value="0">
         </div>
 
         <div class="control-group">
-            <h3>HALAMAN 2 (ISI)</h3>
-            <label>Isi Berita</label>
-            <textarea id="in-p2-text" rows="4" placeholder="Masukan narasi..."></textarea>
-            
-            <label>Gambar Kiri (Halaman 2)</label>
+            <h3>HALAMAN ISI (2+)</h3>
+            <label>Narasi Berita</label>
+            <textarea id="in-p2-text" rows="3">Masukan teks berita...</textarea>
+            <label>Upload 2 Gambar (Halaman 2)</label>
             <input type="file" id="in-p2-img1">
-            
-            <label>Gambar Kanan (Halaman 2)</label>
             <input type="file" id="in-p2-img2">
         </div>
 
-        <button class="btn-download" onclick="window.print()">EXPORT PDF / CETAK</button>
+        <div class="control-group">
+            <h3>EXPORT</h3>
+            <select id="export-page-select">
+                <option value="all">Semua Halaman (Batch)</option>
+                <option value="1">Halaman 1</option>
+                <option value="2">Halaman 2</option>
+                <option value="3">Halaman 3</option>
+            </select>
+            <div class="btn-row">
+                <button onclick="exportImage()" style="background: #10b981;">PNG</button>
+                <button onclick="exportPDF()" style="background: #ef4444;">PDF</button>
+            </div>
+        </div>
     </div>
 
     <div class="preview-container" id="preview-list">
-        <div class="canvas" id="page-1" style="background-image: url('template/news1.png');">
-            <span class="page-tag">Halaman 1</span>
-            <img id="view-h1-img" class="user-img" style="top: 20%; left: 10%; width: 80%;">
-            <div id="view-h1-text" class="headline-text">HEADLINE BERITA</div>
-        </div>
-
-        <div class="canvas" id="page-2" style="background-image: url('template/news2.png');">
-            <span class="page-tag">Halaman 2</span>
-            <div id="view-p2-text" style="padding: 40px; color: black; font-size: 16px;"></div>
-            <img id="view-p2-img1" class="user-img" style="bottom: 50px; left: 5%; width: 40%;">
-            <img id="view-p2-img2" class="user-img" style="bottom: 50px; right: 5%; width: 40%;">
+        <div class="page-wrapper" id="page-1">
+            <img src="template/news1.png" class="bg-template">
+            <div class="content-layer">
+                <img id="view-h1-img" class="user-img" style="top: 20%; left: 10%; width: 80%;">
+                <div id="view-h1-text" class="headline-text" style="top: 75%; font-size: 35px;">HEADLINE BERITA</div>
+            </div>
         </div>
 
         </div>
 
     <script>
-        // Update Teks Halaman 1
+        const previewList = document.getElementById('preview-list');
+
+        // Generate Halaman 2-7
+        for(let i = 2; i <= 7; i++) {
+            const ext = (i === 1) ? 'png' : 'jpg'; // Sesuai permintaan: hal 1 png, sisanya jpg
+            const templateFile = (i % 2 === 0) ? `news2.${ext}` : `news3.${ext}`;
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'page-wrapper';
+            wrapper.id = `page-${i}`;
+            wrapper.innerHTML = `
+                <img src="template/${templateFile}" class="bg-template">
+                <div class="content-layer">
+                    ${i === 2 ? `
+                        <div id="view-p2-text" style="padding:40px; color:black; font-size:16px;"></div>
+                        <img id="view-p2-img1" class="user-img" style="bottom:10%; left:5%; width:40%;">
+                        <img id="view-p2-img2" class="user-img" style="bottom:10%; right:5%; width:40%;">
+                    ` : ''}
+                </div>
+            `;
+            previewList.appendChild(wrapper);
+        }
+
+        // --- LOGIKA INTERAKSI ---
         const inH1Text = document.getElementById('in-h1-text');
         const viewH1Text = document.getElementById('view-h1-text');
-        const inH1Size = document.getElementById('in-h1-size');
-        const inH1Y = document.getElementById('in-h1-y');
+        inH1Text.oninput = () => viewH1Text.innerText = inH1Text.value;
 
-        inH1Text.oninput = () => viewH1Text.innerText = inH1Text.value || "HEADLINE BERITA";
-        inH1Size.oninput = () => viewH1Text.style.fontSize = inH1Size.value + "px";
-        inH1Y.oninput = () => viewH1Text.style.top = inH1Y.value + "%";
+        document.getElementById('in-h1-size').oninput = (e) => viewH1Text.style.fontSize = e.target.value + 'px';
+        document.getElementById('in-h1-y').oninput = (e) => viewH1Text.style.top = e.target.value + '%';
 
-        // Update Teks Halaman 2
         const inP2Text = document.getElementById('in-p2-text');
-        const viewP2Text = document.getElementById('view-p2-text');
-        inP2Text.oninput = () => viewP2Text.innerText = inP2Text.value;
+        inP2Text.oninput = () => document.getElementById('view-p2-text').innerText = inP2Text.value;
 
-        // Fungsi Upload & Transformasi Gambar
-        function setupImageControl(fileInputId, targetImgId, zoomId = null, yPosId = null) {
-            const input = document.getElementById(fileInputId);
-            const img = document.getElementById(targetImgId);
-            
-            input.onchange = function() {
+        // Upload Handling
+        function handleImg(inputId, viewId, zoomId = null) {
+            document.getElementById(inputId).onchange = function() {
                 const reader = new FileReader();
-                reader.onload = (e) => img.src = e.target.result;
+                reader.onload = (e) => {
+                    const img = document.getElementById(viewId);
+                    img.src = e.target.result;
+                };
                 if(this.files[0]) reader.readAsDataURL(this.files[0]);
             };
-
             if(zoomId) {
-                document.getElementById(zoomId).oninput = function() {
-                    img.style.transform = `scale(${this.value / 100}) translateY(${document.getElementById(yPosId).value}px)`;
-                };
-            }
-            if(yPosId) {
-                document.getElementById(yPosId).oninput = function() {
-                    img.style.transform = `scale(${document.getElementById(zoomId).value / 100}) translateY(${this.value}px)`;
+                document.getElementById(zoomId).oninput = (e) => {
+                    document.getElementById(viewId).style.transform = `scale(${e.target.value/100})`;
                 };
             }
         }
 
-        setupImageControl('in-h1-img', 'view-h1-img', 'zoom-h1-img', 'y-h1-img');
-        setupImageControl('in-p2-img1', 'view-p2-img1');
-        setupImageControl('in-p2-img2', 'view-p2-img2');
+        handleImg('in-h1-img', 'view-h1-img', 'zoom-h1-img');
+        handleImg('in-p2-img1', 'view-p2-img1');
+        handleImg('in-p2-img2', 'view-p2-img2');
 
-        // Generate Halaman 3 sampai 7
-        const list = document.getElementById('preview-list');
-        for(let i = 3; i <= 7; i++) {
-            const page = document.createElement('div');
-            page.className = 'canvas';
-            // Logic: Genap = news2, Ganjil = news3
-            const templateFile = (i % 2 === 0) ? 'news2.png' : 'news3.png';
-            page.style.backgroundImage = `url('template/${templateFile}')`;
-            page.innerHTML = `<span class="page-tag">Halaman ${i}</span>`;
-            list.appendChild(page);
+        // --- LOGIKA EXPORT ---
+        async function exportImage() {
+            const val = document.getElementById('export-page-select').value;
+            const pages = val === 'all' ? [1,2,3,4,5,6,7] : [val];
+            for(let p of pages) {
+                const canvas = await html2canvas(document.getElementById(`page-${p}`), {scale: 2});
+                const link = document.createElement('a');
+                link.download = `Page-${p}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+
+        async function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const val = document.getElementById('export-page-select').value;
+            const pages = val === 'all' ? [1,2,3,4,5,6,7] : [val];
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            for(let i=0; i<pages.length; i++) {
+                const canvas = await html2canvas(document.getElementById(`page-${pages[i]}`), {scale: 2});
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                if(i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            }
+            pdf.save('Design.pdf');
         }
     </script>
 </body>
