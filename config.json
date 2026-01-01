@@ -1,0 +1,12 @@
+{
+  "templates": [
+    {
+      "category": "NEWS",
+      "code": "sakatimes"
+    },
+    {
+      "category": "MAJALAH",
+      "code": "kreatif2026"
+    }
+  ]
+}
