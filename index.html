@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News Template Editor</title>
+    <title>TEMPLATE-IN | News Editor</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb;
-            --bg-dark: #1e293b;
-            --sidebar-width: 350px;
+            --primary: #3b82f6;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
         }
 
         body {
@@ -17,219 +17,220 @@
             font-family: 'League Spartan', sans-serif;
             display: flex;
             height: 100vh;
-            background-color: #0f172a;
+            background-color: var(--bg-dark);
             color: white;
+            overflow: hidden;
         }
 
-        /* Sidebar Styling */
+        /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-width);
-            background: var(--bg-dark);
+            width: 380px;
+            background: #111827;
             padding: 20px;
             overflow-y: auto;
             border-right: 1px solid #334155;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.3);
         }
 
-        .sidebar h2 { color: #60a5fa; margin-bottom: 20px; }
+        .sidebar h1 { color: var(--primary); font-size: 24px; letter-spacing: 2px; margin-bottom: 30px; }
 
         .control-group {
-            background: #334155;
+            background: var(--card-bg);
             padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
         }
 
-        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; }
-        input[type="text"], textarea, input[type="file"], select {
+        .control-group h3 { font-size: 16px; margin-top: 0; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+
+        label { display: block; margin: 10px 0 5px; font-size: 13px; color: #cbd5e1; }
+        
+        input[type="text"], textarea, input[type="file"] {
             width: 100%;
             padding: 10px;
-            border-radius: 5px;
-            border: none;
-            margin-bottom: 10px;
-            box-sizing: border-box;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            font-family: inherit;
         }
 
-        .range-slider { width: 100%; margin-top: 5px; }
+        .slider-box { display: flex; align-items: center; gap: 10px; }
+        input[type="range"] { flex: 1; }
 
-        /* Preview Area */
-        .main-content {
+        /* PREVIEW AREA */
+        .preview-container {
             flex: 1;
+            padding: 40px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow-y: auto;
-            padding: 40px;
-            gap: 30px;
-            background-image: radial-gradient(#334155 0.5px, transparent 0.5px);
-            background-size: 20px 20px;
+            gap: 50px;
+            background: #1e293b;
         }
 
-        /* Canvas Style (Halaman) */
-        .page-canvas {
-            width: 400px;
-            height: 550px;
+        .canvas {
+            width: 450px; /* Lebar standar preview */
+            aspect-ratio: 3/4; /* Menyesuaikan proporsi umum template news */
             background-color: white;
-            background-size: cover;
+            background-size: contain; /* Agar background image asli tidak terpotong */
+            background-repeat: no-repeat;
             background-position: center;
             position: relative;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
-            color: black;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             overflow: hidden;
-            flex-shrink: 0;
         }
 
-        /* Elemen di dalam Canvas */
+        /* ELEMENT STYLES */
         .headline-text {
             position: absolute;
-            bottom: 50px;
-            left: 20px;
-            right: 20px;
-            font-size: 32px;
+            width: 90%;
+            left: 5%;
             font-weight: 700;
-            line-height: 1;
             text-transform: uppercase;
-            cursor: move;
+            color: black;
+            line-height: 0.9;
+            pointer-events: none;
         }
 
-        .attached-img {
+        .user-img {
             position: absolute;
-            max-width: 100%;
-            cursor: move;
+            transform-origin: center;
             object-fit: contain;
         }
 
-        .page-label {
+        .page-tag {
             position: absolute;
-            top: -25px;
+            top: -30px;
             left: 0;
-            color: #94a3b8;
-            font-size: 14px;
+            color: #64748b;
+            font-weight: bold;
         }
 
-        .p2-content {
-            padding: 60px 30px;
-            font-size: 18px;
-        }
-
-        button {
+        .btn-download {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 15px;
             width: 100%;
+            border-radius: 8px;
             font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
         }
-        
-        button:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2>News Editor</h2>
-        
-        <div class="control-group">
-            <label>Pilih Tema</label>
-            <select id="template-select">
-                <option value="news">Kategori: News</option>
-            </select>
-        </div>
+        <h1>TEMPLATE-IN</h1>
 
         <div class="control-group">
-            <h3>Halaman 1 (Cover)</h3>
-            <label>Headline Berita</label>
-            <textarea id="in-h1-text" rows="3" placeholder="Masukan judul..."></textarea>
+            <h3>HALAMAN 1 (COVER)</h3>
+            <label>Headline Title</label>
+            <textarea id="in-h1-text" rows="2" placeholder="Masukan Judul Berita"></textarea>
             
-            <label>Posisi Y Judul</label>
-            <input type="range" id="in-h1-pos" class="range-slider" min="0" max="500" value="450">
+            <label>Ukuran Font</label>
+            <input type="range" id="in-h1-size" min="10" max="80" value="40">
 
-            <label>Upload Foto Utama</label>
-            <input type="file" id="in-h1-img" accept="image/*">
+            <label>Posisi Vertikal Teks</label>
+            <input type="range" id="in-h1-y" min="0" max="100" value="80">
+
+            <label>Upload Gambar Utama</label>
+            <input type="file" id="in-h1-img">
+            
+            <label>Zoom Gambar (%)</label>
+            <input type="range" id="zoom-h1-img" min="10" max="200" value="100">
+            
+            <label>Posisi Y Gambar</label>
+            <input type="range" id="y-h1-img" min="-200" max="200" value="0">
         </div>
 
         <div class="control-group">
-            <h3>Halaman 2+ (Isi)</h3>
-            <label>Isi Teks Halaman 2</label>
-            <textarea id="in-p2-text" rows="5" placeholder="Tulis berita di sini..."></textarea>
+            <h3>HALAMAN 2 (ISI)</h3>
+            <label>Isi Berita</label>
+            <textarea id="in-p2-text" rows="4" placeholder="Masukan narasi..."></textarea>
             
-            <label>Upload Gambar Isi (Maks 2)</label>
-            <input type="file" id="in-p2-img1" accept="image/*">
-            <input type="file" id="in-p2-img2" accept="image/*">
+            <label>Gambar Kiri (Halaman 2)</label>
+            <input type="file" id="in-p2-img1">
+            
+            <label>Gambar Kanan (Halaman 2)</label>
+            <input type="file" id="in-p2-img2">
         </div>
 
-        <button onclick="window.print()">Simpan / Export PDF</button>
+        <button class="btn-download" onclick="window.print()">EXPORT PDF / CETAK</button>
     </div>
 
-    <div class="main-content" id="preview-container">
-        <div class="page-canvas" id="canvas-1" style="background-image: url('template/news1.png')">
-            <div class="page-label">Halaman 1</div>
-            <img id="view-h1-img" class="attached-img" style="top: 100px; width: 80%; left: 10%;">
-            <div id="view-h1-text" class="headline-text">Headline Berita</div>
+    <div class="preview-container" id="preview-list">
+        <div class="canvas" id="page-1" style="background-image: url('template/news1.png');">
+            <span class="page-tag">Halaman 1</span>
+            <img id="view-h1-img" class="user-img" style="top: 20%; left: 10%; width: 80%;">
+            <div id="view-h1-text" class="headline-text">HEADLINE BERITA</div>
         </div>
 
-        <div class="page-canvas" id="canvas-2" style="background-image: url('template/news2.png')">
-            <div class="page-label">Halaman 2</div>
-            <div id="view-p2-text" class="p2-content">Tulis isi berita di sidebar...</div>
-            <img id="view-p2-img1" class="attached-img" style="top: 250px; width: 40%; left: 10%;">
-            <img id="view-p2-img2" class="attached-img" style="top: 250px; width: 40%; left: 55%;">
+        <div class="canvas" id="page-2" style="background-image: url('template/news2.png');">
+            <span class="page-tag">Halaman 2</span>
+            <div id="view-p2-text" style="padding: 40px; color: black; font-size: 16px;"></div>
+            <img id="view-p2-img1" class="user-img" style="bottom: 50px; left: 5%; width: 40%;">
+            <img id="view-p2-img2" class="user-img" style="bottom: 50px; right: 5%; width: 40%;">
         </div>
 
-        <div class="page-canvas" id="canvas-3" style="background-image: url('template/news3.png')">
-            <div class="page-label">Halaman 3</div>
         </div>
-    </div>
 
     <script>
-        // Logika Page 1
+        // Update Teks Halaman 1
         const inH1Text = document.getElementById('in-h1-text');
         const viewH1Text = document.getElementById('view-h1-text');
-        const inH1Pos = document.getElementById('in-h1-pos');
+        const inH1Size = document.getElementById('in-h1-size');
+        const inH1Y = document.getElementById('in-h1-y');
 
-        inH1Text.addEventListener('input', () => {
-            viewH1Text.innerText = inH1Text.value || "Headline Berita";
-        });
+        inH1Text.oninput = () => viewH1Text.innerText = inH1Text.value || "HEADLINE BERITA";
+        inH1Size.oninput = () => viewH1Text.style.fontSize = inH1Size.value + "px";
+        inH1Y.oninput = () => viewH1Text.style.top = inH1Y.value + "%";
 
-        inH1Pos.addEventListener('input', () => {
-            viewH1Text.style.top = inH1Pos.value + "px";
-            viewH1Text.style.bottom = "auto";
-        });
-
-        // Logika Page 2
+        // Update Teks Halaman 2
         const inP2Text = document.getElementById('in-p2-text');
         const viewP2Text = document.getElementById('view-p2-text');
+        inP2Text.oninput = () => viewP2Text.innerText = inP2Text.value;
 
-        inP2Text.addEventListener('input', () => {
-            viewP2Text.innerText = inP2Text.value || "Isi berita...";
-        });
-
-        // Logika Upload Gambar (Universal Function)
-        function handleImageUpload(inputEl, targetImgEl) {
-            inputEl.addEventListener('change', function() {
+        // Fungsi Upload & Transformasi Gambar
+        function setupImageControl(fileInputId, targetImgId, zoomId = null, yPosId = null) {
+            const input = document.getElementById(fileInputId);
+            const img = document.getElementById(targetImgId);
+            
+            input.onchange = function() {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    targetImgEl.src = e.target.result;
-                };
+                reader.onload = (e) => img.src = e.target.result;
                 if(this.files[0]) reader.readAsDataURL(this.files[0]);
-            });
+            };
+
+            if(zoomId) {
+                document.getElementById(zoomId).oninput = function() {
+                    img.style.transform = `scale(${this.value / 100}) translateY(${document.getElementById(yPosId).value}px)`;
+                };
+            }
+            if(yPosId) {
+                document.getElementById(yPosId).oninput = function() {
+                    img.style.transform = `scale(${document.getElementById(zoomId).value / 100}) translateY(${this.value}px)`;
+                };
+            }
         }
 
-        handleImageUpload(document.getElementById('in-h1-img'), document.getElementById('view-h1-img'));
-        handleImageUpload(document.getElementById('in-p2-img1'), document.getElementById('view-p2-img1'));
-        handleImageUpload(document.getElementById('in-p2-img2'), document.getElementById('view-p2-img2'));
+        setupImageControl('in-h1-img', 'view-h1-img', 'zoom-h1-img', 'y-h1-img');
+        setupImageControl('in-p2-img1', 'view-p2-img1');
+        setupImageControl('in-p2-img2', 'view-p2-img2');
 
-        // Otomatisasi Halaman Berikutnya (Page 4, 5, dst)
-        const container = document.getElementById('preview-container');
-        for (let i = 4; i <= 7; i++) {
-            const newPage = document.createElement('div');
-            newPage.className = 'page-canvas';
-            // Page 4 pake news2, Page 5 pake news3 (berulang)
-            const templateNum = (i % 2 === 0) ? 2 : 3;
-            newPage.style.backgroundImage = `url('template/news${templateNum}.png')`;
-            newPage.innerHTML = `<div class="page-label">Halaman ${i}</div>`;
-            container.appendChild(newPage);
+        // Generate Halaman 3 sampai 7
+        const list = document.getElementById('preview-list');
+        for(let i = 3; i <= 7; i++) {
+            const page = document.createElement('div');
+            page.className = 'canvas';
+            // Logic: Genap = news2, Ganjil = news3
+            const templateFile = (i % 2 === 0) ? 'news2.png' : 'news3.png';
+            page.style.backgroundImage = `url('template/${templateFile}')`;
+            page.innerHTML = `<span class="page-tag">Halaman ${i}</span>`;
+            list.appendChild(page);
         }
     </script>
 </body>
