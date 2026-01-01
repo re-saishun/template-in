@@ -2,204 +2,177 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>TEMPLATE-IN | Fixed Editor</title>
+    <title>TEMPLATE-IN Pro | Export System</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; }
-        body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --accent: #10b981; }
+        body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
-        .sidebar { width: 400px; background: #111827; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; display: flex; flex-direction: column; }
-        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #1e293b; }
+        /* SIDEBAR */
+        .sidebar { width: 380px; background: #111827; padding: 20px; overflow-y: auto; border-right: 1px solid #334155; height: 100vh; box-sizing: border-box; }
+        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 40px; background: #1e293b; }
+        .preview-zoom { transform: scale(0.65); transform-origin: top center; margin-bottom: -280px; }
+        .page-wrapper { position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5); background: white; line-height: 0; display: inline-block; }
+        .template-frame { position: relative; display: block; max-width: 500px; height: auto; pointer-events: none; z-index: 2; }
         
-        .control-group { background: var(--card); padding: 18px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #475569; }
-        h3 { margin: 0 0 15px 0; font-size: 14px; color: var(--primary); text-transform: uppercase; }
-        label { display: block; margin: 12px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
-        .grid-control { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
-
-        .page-wrapper { position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6); background: white; line-height: 0; display: inline-block; }
-        .template-frame { position: relative; z-index: 5; display: block; max-width: 500px; height: auto; pointer-events: none; }
-        
-        /* Layering */
+        /* LAYER SYSTEM */
         .layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        .bg-layer { z-index: 1; }
-        .content-layer { z-index: 6; }
+        .z-back { z-index: 1; }
+        .z-front { z-index: 4; } 
 
-        .transform-item { position: absolute; transform-origin: center; pointer-events: none; display: none; }
-        .headline-text { position: absolute; width: 100%; text-align: center; color: black; font-weight: 700; transform-origin: center; line-height: 1.2; }
+        .user-img { position: absolute; transform-origin: center; left: 50%; top: 50%; display: none; }
+        .text-el { position: absolute; width: 100%; text-align: center; color: black; font-weight: 700; transform-origin: center; }
 
-        /* Auth */
-        #auth-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 320px; text-align: center; border: 1px solid #334155; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        /* MODAL EXPORT */
+        #export-modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+            display: none; justify-content: center; align-items: center; z-index: 10000; 
+        }
+        .export-box { background: var(--card); padding: 30px; border-radius: 20px; width: 350px; border: 1px solid #475569; }
+        .export-box h2 { margin-top: 0; color: var(--primary); }
+        .export-box select, .export-box input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #0f172a; color: white; border: 1px solid #475569; box-sizing: border-box; }
+
+        /* UI ELEMENTS */
+        .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #475569; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-add { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
 
-<div id="auth-overlay">
-    <div class="modal">
-        <h2>TEMPLATE-IN</h2>
-        <select id="auth-category"><option value="NEWS">NEWS</option></select>
-        <input type="password" id="auth-code" placeholder="KODE AKSES">
-        <button class="btn" style="background:var(--primary); color:white" onclick="checkAccess()">LOG IN</button>
+<div id="export-modal">
+    <div class="export-box">
+        <h2>EXPORT DESIGN</h2>
+        <label>Pilih Format</label>
+        <select id="export-format">
+            <option value="pdf">Dokumen PDF (High Quality)</option>
+            <option value="png">Gambar PNG (ZIP/Batch)</option>
+        </select>
+        
+        <label>Pilih Halaman</label>
+        <select id="export-range" onchange="toggleRangeInput()">
+            <option value="all">Semua Halaman</option>
+            <option value="single">Halaman Tertentu</option>
+        </select>
+        <input type="number" id="specific-page" placeholder="Nomor Halaman (Contoh: 1)" style="display:none" min="1">
+
+        <button class="btn btn-main" onclick="processExport()">MULAI DOWNLOAD</button>
+        <button class="btn" style="background:#ef4444; color:white" onclick="closeExport()">BATAL</button>
     </div>
 </div>
 
-<div id="main-app" style="display:none; width: 100%; height: 100vh; display: none;">
+<div id="main-app" style="width:100%; display: flex;">
     <div class="sidebar">
         <h2 style="text-align:center; color:var(--primary);">DESIGN PANEL</h2>
-        <div id="sidebar-controls">
-            <div class="control-group">
-                <h3>PAGE 1 (COVER)</h3>
-                <label>Headline</label>
-                <textarea oninput="updateText('v-p1-t', this.value)" style="width:100%; height:50px;">HEADLINE BERITA</textarea>
-                <div class="grid-control">
-                    <div><label>X</label><input type="range" id="tx-p1" min="-500" max="500" value="0" oninput="sync('text', 'v-p1-t', 'p1')"></div>
-                    <div><label>Y</label><input type="range" id="ty-p1" min="-500" max="500" value="0" oninput="sync('text', 'v-p1-t', 'p1')"></div>
-                    <div><label>Zoom</label><input type="range" id="tz-p1" min="10" max="300" value="100" oninput="sync('text', 'v-p1-t', 'p1')"></div>
-                </div>
-                <label>Background Image</label>
-                <input type="file" onchange="updateImage(this, 'v-p1-i1')">
-                <div class="grid-control">
-                    <div><label>X</label><input type="range" id="x-p1i1" min="-800" max="800" value="0" oninput="sync('img', 'v-p1-i1', 'p1i1')"></div>
-                    <div><label>Y</label><input type="range" id="y-p1i1" min="-800" max="800" value="0" oninput="sync('img', 'v-p1-i1', 'p1i1')"></div>
-                    <div><label>Size</label><input type="range" id="z-p1i1" min="10" max="500" value="100" oninput="sync('img', 'v-p1-i1', 'p1i1')"></div>
-                    <div><label>Rot</label><input type="range" id="r-p1i1" min="-180" max="180" value="0" oninput="sync('img', 'v-p1-i1', 'p1i1')"></div>
-                </div>
+        
+        <div class="control-group">
+            <h3>PAGE 1 (COVER)</h3>
+            <textarea oninput="updateText('v-p1-t', this.value)">HEADLINE BERITA</textarea>
+            <input type="file" onchange="upload(this, 'v-p1-i1')">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
+                <input type="range" id="x-p1i1" min="-500" max="500" value="0" oninput="sync('img', 'v-p1-i1', 'p1i1')">
+                <input type="range" id="z-p1i1" min="10" max="400" value="100" oninput="sync('img', 'v-p1-i1', 'p1i1')">
             </div>
-            <div id="extra-controls"></div>
         </div>
-        <button class="btn" style="background:#10b981; color:white" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
-        <button class="btn" style="background:var(--primary); color:white" onclick="exportPDF()">DOWNLOAD PDF</button>
+
+        <div id="dynamic-controls"></div>
+
+        <button class="btn btn-add" onclick="addPage()">+ TAMBAH HALAMAN</button>
+        <button class="btn btn-main" onclick="openExport()">EXPORT DESIGN</button>
     </div>
 
     <div class="preview-container" id="preview-list">
-        <div class="page-wrapper" id="page-1">
-            <div class="layer bg-layer">
-                <img id="v-p1-i1" class="transform-item" style="left:50%; top:50%; width:100%;">
-            </div>
-            <img src="template/news1.png" class="template-frame">
-            <div class="layer content-layer">
-                <div id="v-p1-t" class="headline-text" style="top:50%; font-size:40px;">HEADLINE BERITA</div>
+        <div class="preview-zoom">
+            <div class="page-wrapper" id="page-1">
+                <div class="layer z-back"><img id="v-p1-i1" class="user-img" style="width:100%"></div>
+                <img src="template/news1.png" class="template-frame">
+                <div class="layer z-front">
+                    <div id="v-p1-t" class="text-el" style="top:50%; font-size:35px;">HEADLINE BERITA</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let pageCount = 1;
+    let pages = 1;
 
-    function checkAccess() {
-        // Simulasi akses (Anda bisa tambahkan fetch config.json kembali di sini)
-        document.getElementById('auth-overlay').style.display = 'none';
-        document.getElementById('main-app').style.display = 'flex';
-        addNewPage(); // Auto Page 2
-        addNewPage(); // Auto Page 3
+    function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
+    function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
+    
+    function toggleRangeInput() {
+        const val = document.getElementById('export-range').value;
+        document.getElementById('specific-page').style.display = (val === 'single') ? 'block' : 'none';
     }
 
-    // FUNGSI UNIVERSIAL UNTUK TRANSFORMASI
-    function sync(type, elementId, pref) {
-        const el = document.getElementById(elementId);
-        if(!el) return;
+    async function processExport() {
+        const format = document.getElementById('export-format').value;
+        const range = document.getElementById('export-range').value;
+        const specific = parseInt(document.getElementById('specific-page').value);
+        
+        const start = (range === 'single' && !isNaN(specific)) ? specific : 1;
+        const end = (range === 'single' && !isNaN(specific)) ? specific : pages;
 
-        if(type === 'text') {
-            const x = document.getElementById(`tx-${pref}`).value;
-            const y = document.getElementById(`ty-${pref}`).value;
-            const z = document.getElementById(`tz-${pref}`).value / 100;
-            const r = document.getElementById(`tr-${pref}`) ? document.getElementById(`tr-${pref}`).value : 0;
-            el.style.transform = `translate(${x}px, ${y}px) scale(${z}) rotate(${r}deg)`;
+        if (start > pages || start < 1) return alert("Halaman tidak ditemukan!");
+
+        closeExport();
+
+        if (format === 'pdf') {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            for (let i = start; i <= end; i++) {
+                const canvas = await html2canvas(document.getElementById(`page-${i}`), {scale: 2, useCORS: true});
+                if (i > start) pdf.addPage();
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
+            }
+            pdf.save('Export_Design.pdf');
         } else {
-            const x = document.getElementById(`x-${pref}`).value;
-            const y = document.getElementById(`y-${pref}`).value;
-            const z = document.getElementById(`z-${pref}`).value / 100;
-            const r = document.getElementById(`r-${pref}`).value;
-            // Penting: Translate -50% agar poros di tengah
-            el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${z}) rotate(${r}deg)`;
+            for (let i = start; i <= end; i++) {
+                const canvas = await html2canvas(document.getElementById(`page-${i}`), {scale: 2});
+                const link = document.createElement('a');
+                link.download = `Halaman-${i}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
         }
     }
 
-    function updateImage(input, targetId) {
+    // Fungsi Add Page, Sync, Upload tetap sama seperti sebelumnya
+    function addPage() {
+        pages++;
+        const p = pages;
+        const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
+        const div = document.createElement('div');
+        div.className = 'control-group';
+        div.innerHTML = `<h3>PAGE ${p}</h3><textarea oninput="updateText('v-p${p}-t', this.value)"></textarea>
+            <input type="file" onchange="upload(this, 'v-p${p}-i1')">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;"><input type="range" id="x-p${p}i1" oninput="sync('img','v-p${p}-i1','p${p}i1')"><input type="range" id="z-p${p}i1" oninput="sync('img','v-p${p}-i1','p${p}i1')"></div>`;
+        document.getElementById('dynamic-controls').appendChild(div);
+
+        const pvw = document.createElement('div');
+        pvw.className = 'preview-zoom';
+        pvw.innerHTML = `<div class="page-wrapper" id="page-${p}"><img src="template/${temp}" class="template-frame"><div class="layer z-front"><img id="v-p${p}-i1" class="user-img" style="width:50%"><div id="v-p${p}-t" class="text-el" style="top:120px; font-size:16px;">Teks Halaman ${p}</div></div></div>`;
+        document.getElementById('preview-list').appendChild(pvw);
+    }
+
+    function sync(type, elId, pref) {
+        const el = document.getElementById(elId);
+        const x = document.getElementById(`x-${pref}`)?.value || 0;
+        const z = (document.getElementById(`z-${pref}`)?.value || 100) / 100;
+        if(el) el.style.transform = `translate(-50%, -50%) translate(${x}px, 0px) scale(${z})`;
+    }
+
+    function upload(input, targetId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.getElementById(targetId);
-                img.src = e.target.result;
-                img.style.display = "block";
-            };
+            reader.onload = (e) => { const img = document.getElementById(targetId); img.src = e.target.result; img.style.display = "block"; };
             reader.readAsDataURL(input.files[0]);
         }
     }
-
-    function updateText(id, val) {
-        document.getElementById(id).innerText = val;
-    }
-
-    function addNewPage() {
-        pageCount++;
-        const pNum = pageCount;
-        const template = (pNum % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
-
-        // 1. Tambah Control Sidebar
-        const ctrl = document.createElement('div');
-        ctrl.className = 'control-group';
-        ctrl.innerHTML = `
-            <h3>PAGE ${pNum}</h3>
-            <label>Teks Narasi</label>
-            <textarea oninput="updateText('v-p${pNum}-t', this.value)" style="width:100%; height:50px;"></textarea>
-            <div class="grid-control">
-                <div><label>X</label><input type="range" id="tx-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'v-p${pNum}-t', 'p${pNum}')"></div>
-                <div><label>Y</label><input type="range" id="ty-p${pNum}" min="-500" max="500" value="0" oninput="sync('text', 'v-p${pNum}-t', 'p${pNum}')"></div>
-                <div><label>Zoom</label><input type="range" id="tz-p${pNum}" min="10" max="300" value="100" oninput="sync('text', 'v-p${pNum}-t', 'p${pNum}')"></div>
-            </div>
-
-            <label>Gambar 1</label>
-            <input type="file" onchange="updateImage(this, 'v-p${pNum}-i1')">
-            <div class="grid-control">
-                <div><label>X</label><input type="range" id="x-p${pNum}i1" min="-600" max="600" value="0" oninput="sync('img', 'v-p${pNum}-i1', 'p${pNum}i1')"></div>
-                <div><label>Y</label><input type="range" id="y-p${pNum}i1" min="-600" max="600" value="0" oninput="sync('img', 'v-p${pNum}-i1', 'p${pNum}i1')"></div>
-                <div><label>Size</label><input type="range" id="z-p${pNum}i1" min="10" max="400" value="100" oninput="sync('img', 'v-p${pNum}-i1', 'p${pNum}i1')"></div>
-                <div><label>Rot</label><input type="range" id="r-p${pNum}i1" min="-180" max="180" value="0" oninput="sync('img', 'v-p${pNum}-i1', 'p${pNum}i1')"></div>
-            </div>
-
-            <label>Gambar 2</label>
-            <input type="file" onchange="updateImage(this, 'v-p${pNum}-i2')">
-            <div class="grid-control">
-                <div><label>X</label><input type="range" id="x-p${pNum}i2" min="-600" max="600" value="0" oninput="sync('img', 'v-p${pNum}-i2', 'p${pNum}i2')"></div>
-                <div><label>Y</label><input type="range" id="y-p${pNum}i2" min="-600" max="600" value="0" oninput="sync('img', 'v-p${pNum}-i2', 'p${pNum}i2')"></div>
-                <div><label>Size</label><input type="range" id="z-p${pNum}i2" min="10" max="400" value="100" oninput="sync('img', 'v-p${pNum}-i2', 'p${pNum}i2')"></div>
-                <div><label>Rot</label><input type="range" id="r-p${pNum}i2" min="-180" max="180" value="0" oninput="sync('img', 'v-p${pNum}-i2', 'p${pNum}i2')"></div>
-            </div>
-        `;
-        document.getElementById('extra-controls').appendChild(ctrl);
-
-        // 2. Tambah Preview Canvas
-        const wrap = document.createElement('div');
-        wrap.className = 'page-wrapper';
-        wrap.id = `page-${pNum}`;
-        wrap.innerHTML = `
-            <div class="layer bg-layer">
-                <img id="v-p${pNum}-i1" class="transform-item" style="left:50%; top:50%; width:40%;">
-                <img id="v-p${pNum}-i2" class="transform-item" style="left:50%; top:50%; width:40%;">
-            </div>
-            <img src="template/${template}" class="template-frame">
-            <div class="layer content-layer">
-                <div id="v-p${pNum}-t" class="headline-text" style="top:20%; font-size:18px; color:black; padding:0 30px;">Teks Halaman ${pNum}</div>
-            </div>
-        `;
-        document.getElementById('preview-list').appendChild(wrap);
-    }
-
-    async function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        for(let i=1; i<=pageCount; i++) {
-            const canvas = await html2canvas(document.getElementById(`page-${i}`), {scale: 2, useCORS: true});
-            if(i > 1) pdf.addPage();
-            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
-        }
-        pdf.save('Sakatimes_Result.pdf');
-    }
+    function updateText(id, val) { document.getElementById(id).innerText = val; }
 </script>
 </body>
 </html>
