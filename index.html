@@ -20,21 +20,16 @@
         /* MAIN APP */
         #main-app { display: none; width: 100%; height: 100vh; flex-direction: row; }
         .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); }
-        .preview-container { flex: 1; padding: 60px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 60px; background: #0f172a; }
+        
+        /* PERBAIKAN: Preview Container agar pas */
+        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background: #0f172a; }
 
         /* CANVAS */
-        .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; }
-        .template-frame { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    z-index: 5; /* Default Layer 2 */
-    pointer-events: none; 
-}        
-        /* Layering Strategy */
-        .layer-behind { position: absolute; inset: 0; z-index: 1; }  /* Khusus P1 */
-        .layer-front { position: absolute; inset: 0; z-index: 10; }   /* P2++ & Teks */
+        .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; }
+        .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }        
+        
+        /* Perbaikan Layering Page 1 agar bisa digeser */
+        .layer-manager { position: absolute; inset: 0; z-index: auto; } 
 
         .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
         .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
@@ -52,6 +47,11 @@
         label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
         textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
+
+        /* PERBAIKAN: Dot Layer Style */
+        .layer-dots { display: flex; gap: 8px; margin-top: 10px; }
+        .dot-btn { flex: 1; padding: 8px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 10px; color: #94a3b8; text-align: center; transition: 0.2s; }
+        .dot-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -79,12 +79,12 @@
                 <label>Headline Utama</label>
                 <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
                 <label>Background</label>
-            <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
-                <select onchange="changeLayer('box-img-p1', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
-                <option value="1">Layer 1 (Paling Bawah)</option>
-                <option value="5">Layer 2 (Sejajar Template)</option>
-                <option value="10" selected>Layer 3 (Paling Atas)</option>
-</select>
+                <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
+                
+                <div class="layer-dots">
+                    <div class="dot-btn" onclick="setLayerDot('box-img-p1', 1, this)">● Di Bawah</div>
+                    <div class="dot-btn active" onclick="setLayerDot('box-img-p1', 10, this)">● Di Atas</div>
+                </div>
             </div>
         </div>
         <button class="btn" style="background: var(--accent)" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
@@ -93,15 +93,15 @@
 
     <div class="preview-container" id="preview-list">
         <div class="page-wrapper" id="page-1">
-            <div class="layer-behind">
-                <div class="editable active" id="box-img-p1" style="width: 500px; height: 707px; left: 0; top: 0;">
+            <div class="layer-manager">
+                <div class="editable active" id="box-img-p1" style="width: 500px; height: 707px; left: 0; top: 0; z-index: 10;">
                     <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x707?text=Background+P1">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
             </div>
             <img src="template/news1.png" class="template-frame">
-            <div class="layer-front">
-                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px;">
+            <div class="layer-manager">
+                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px; z-index: 15;">
                     <div id="txt-p1" class="text-element" style="font-size: 40px; color: black;">HEADLINE BERITA UTAMA</div>
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
@@ -221,6 +221,16 @@
 
     function updateLiveText(id, val) { document.getElementById(id).innerText = val; }
 
+    function setLayerDot(targetBoxId, zValue, btn) {
+        const target = document.getElementById(targetBoxId);
+        if (target) {
+            target.style.zIndex = zValue;
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.dot-btn').forEach(d => d.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    }
+
     let pageCount = 1;
     function addNewPage() {
         pageCount++;
@@ -230,39 +240,37 @@
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-    <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
-    
-    <label>Foto 1</label>
-    <input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
-    <select onchange="changeLayer('box-img-p${p}-1', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
-        <option value="1">Layer 1 (Bawah)</option>
-        <option value="5">Layer 2 (Sejajar Template)</option>
-        <option value="10" selected>Layer 3 (Atas)</option>
-    </select>
-
-    <label>Foto 2</label>
-    <input type="file" onchange="uploadToElement(this, 'img-p${p}-2', 'box-img-p${p}-2')">
-    <select onchange="changeLayer('box-img-p${p}-2', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
-        <option value="1">Layer 1 (Bawah)</option>
-        <option value="5">Layer 2 (Sejajar Template)</option>
-        <option value="10" selected>Layer 3 (Atas)</option>
-    </select>`;
+            <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
+            <label>Foto 1</label>
+            <input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
+            <select onchange="changeLayer('box-img-p${p}-1', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
+                <option value="1">Layer 1 (Bawah)</option>
+                <option value="5">Layer 2 (Sejajar Template)</option>
+                <option value="10" selected>Layer 3 (Atas)</option>
+            </select>
+            <label>Foto 2</label>
+            <input type="file" onchange="uploadToElement(this, 'img-p${p}-2', 'box-img-p${p}-2')">
+            <select onchange="changeLayer('box-img-p${p}-2', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
+                <option value="1">Layer 1 (Bawah)</option>
+                <option value="5">Layer 2 (Sejajar Template)</option>
+                <option value="10" selected>Layer 3 (Atas)</option>
+            </select>`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
 
         const wrap = document.createElement('div');
         wrap.className = 'page-wrapper'; wrap.id = `page-${p}`;
         wrap.innerHTML = `
             <img src="template/${temp}" class="template-frame">
-            <div class="layer-front">
-                <div class="editable" id="box-img-p${p}-1" style="width:200px; height:200px; left:20px; top:150px; display:none">
+            <div class="layer-manager">
+                <div class="editable" id="box-img-p${p}-1" style="width:200px; height:200px; left:20px; top:150px; display:none; z-index:10;">
                     <img id="img-p${p}-1" class="user-image">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
-                <div class="editable" id="box-img-p${p}-2" style="width:200px; height:200px; left:250px; top:150px; display:none">
+                <div class="editable" id="box-img-p${p}-2" style="width:200px; height:200px; left:250px; top:150px; display:none; z-index:10;">
                     <img id="img-p${p}-2" class="user-image">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
-                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px;">
+                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px; z-index:15;">
                     <div id="txt-p${p}" class="text-element" style="font-size:22px;">Narasi halaman ${p}...</div>
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
@@ -272,12 +280,14 @@
         initInteract(wrap.querySelector(`#box-img-p${p}-2`));
         initInteract(wrap.querySelector(`#box-txt-p${p}`));
     }
+
     function changeLayer(targetBoxId, zValue) {
-    const target = document.getElementById(targetBoxId);
-    if (target) {
-        target.style.zIndex = zValue;
+        const target = document.getElementById(targetBoxId);
+        if (target) target.style.zIndex = zValue;
     }
-}
+
+    function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
+    function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
 
     async function processExport(format) {
         document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
@@ -296,6 +306,7 @@
             }
         }
         if (format === 'pdf') pdf.save('Desain_Final.pdf');
+        closeExport();
     }
 
     initInteract(document.getElementById('box-img-p1'));
