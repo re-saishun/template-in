@@ -1,7 +1,7 @@
 {
   "templates": [
     {
-      "category": "NEWS",
+      "category": "SAKATIMES",
       "code": "sakatimes",
       "files": [
         "news1.png",
