@@ -2,11 +2,21 @@
   "templates": [
     {
       "category": "NEWS",
-      "code": "sakatimes"
+      "code": "sakatimes",
+      "files": [
+        "news1.png",
+        "news2.jpg",
+        "news3.jpg"
+      ]
     },
     {
       "category": "MAJALAH",
-      "code": "kreatif2026"
+      "code": "kreatif2026",
+      "files": [
+        "mag_cover.jpg",
+        "mag_content1.jpg",
+        "mag_content2.jpg"
+      ]
     }
   ]
 }
