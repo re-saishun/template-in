@@ -24,8 +24,14 @@
 
         /* CANVAS */
         .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; }
-        .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }
-        
+        .template-frame { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    z-index: 5; /* Default Layer 2 */
+    pointer-events: none; 
+}        
         /* Layering Strategy */
         .layer-behind { position: absolute; inset: 0; z-index: 1; }  /* Khusus P1 */
         .layer-front { position: absolute; inset: 0; z-index: 10; }   /* P2++ & Teks */
@@ -72,8 +78,13 @@
                 <h3 style="font-size:14px; color:var(--accent)">PAGE 1 (COVER)</h3>
                 <label>Headline Utama</label>
                 <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
-                <label>Background (Di Belakang)</label>
-                <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
+                <label>Background</label>
+            <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
+                <select onchange="changeLayer('box-img-p1', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
+                <option value="1">Layer 1 (Paling Bawah)</option>
+                <option value="5">Layer 2 (Sejajar Template)</option>
+                <option value="10" selected>Layer 3 (Paling Atas)</option>
+</select>
             </div>
         </div>
         <button class="btn" style="background: var(--accent)" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
@@ -214,14 +225,28 @@
     function addNewPage() {
         pageCount++;
         const p = pageCount;
-        const temp = (p % 2 === 0) ? 'news2.png' : 'news3.png';
+        const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
         
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-            <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
-            <label>Foto 1 (Di Atas)</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
-            <label>Foto 2 (Di Atas)</label><input type="file" onchange="uploadToElement(this, 'img-p${p}-2', 'box-img-p${p}-2')">`;
+    <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
+    
+    <label>Foto 1</label>
+    <input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
+    <select onchange="changeLayer('box-img-p${p}-1', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
+        <option value="1">Layer 1 (Bawah)</option>
+        <option value="5">Layer 2 (Sejajar Template)</option>
+        <option value="10" selected>Layer 3 (Atas)</option>
+    </select>
+
+    <label>Foto 2</label>
+    <input type="file" onchange="uploadToElement(this, 'img-p${p}-2', 'box-img-p${p}-2')">
+    <select onchange="changeLayer('box-img-p${p}-2', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
+        <option value="1">Layer 1 (Bawah)</option>
+        <option value="5">Layer 2 (Sejajar Template)</option>
+        <option value="10" selected>Layer 3 (Atas)</option>
+    </select>`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
 
         const wrap = document.createElement('div');
@@ -247,6 +272,12 @@
         initInteract(wrap.querySelector(`#box-img-p${p}-2`));
         initInteract(wrap.querySelector(`#box-txt-p${p}`));
     }
+    function changeLayer(targetBoxId, zValue) {
+    const target = document.getElementById(targetBoxId);
+    if (target) {
+        target.style.zIndex = zValue;
+    }
+}
 
     async function processExport(format) {
         document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
