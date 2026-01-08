@@ -11,26 +11,34 @@
         :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --accent: #10b981; --border: #334155; }
         body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
+        /* Auth Overlay */
         #auth-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid var(--border); }
         .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
         .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
+        /* Layout Utama */
         #main-app { display: none; width: 100%; height: 100vh; flex-direction: row; }
-        .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); }
+        
+        /* Sidebar & Menu Mobile */
+        #menu-toggle { position: fixed; top: 15px; left: 15px; z-index: 1000; background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 20px; cursor: pointer; display: none; }
+        #sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
+
+        .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); transition: 0.3s ease; }
         .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background: #0f172a; }
 
+        /* Canvas Page */
         .page-wrapper { position: relative; width: 500px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; }
         .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }        
         .layer-manager { position: absolute; inset: 0; z-index: auto; } 
 
+        /* Elements */
         .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
         .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
-        
-        /* PERBAIKAN: Tidak Stretch */
         .user-image { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
+        /* Controls */
         .handle { position: absolute; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; z-index: 100; }
         .editable.active .handle { display: block; }
         .h-resizer { right: -8px; bottom: -8px; cursor: nwse-resize; }
@@ -45,9 +53,22 @@
         .layer-dots { display: flex; gap: 8px; margin-top: 10px; }
         .dot-btn { flex: 1; padding: 8px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 10px; color: #94a3b8; text-align: center; transition: 0.2s; }
         .dot-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #menu-toggle { display: block; }
+            .sidebar { position: fixed; left: -360px; top: 0; bottom: 0; z-index: 999; width: 300px; }
+            .sidebar.open { left: 0; }
+            #sidebar-overlay.active { display: block; }
+            .preview-container { padding: 80px 10px 20px 10px; }
+            .page-wrapper { width: 95vw; }
+        }
     </style>
 </head>
 <body>
+
+<button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div id="auth-overlay">
     <div class="modal">
@@ -86,12 +107,17 @@
     let configData = { "templates": [] };
     let currentSession = null;
     let pageCount = 0;
-    let imgCounter = 0; // Untuk ID unik foto tambahan
+    let imgCounter = 0;
 
     fetch('config.json').then(r => r.json()).then(d => { 
         configData = d; 
         document.getElementById('auth-status').innerText = "Config Synced."; 
     });
+
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('open');
+        document.getElementById('sidebar-overlay').classList.toggle('active');
+    }
 
     function checkAccess() {
         const cat = document.getElementById('auth-category').value;
@@ -109,8 +135,9 @@
         const wrapper = document.getElementById(pageId);
         const img = wrapper.querySelector('.template-frame');
         const adjust = () => {
+            const currentWidth = wrapper.offsetWidth;
             const ratio = img.naturalHeight / img.naturalWidth;
-            wrapper.style.height = (500 * ratio) + "px";
+            wrapper.style.height = (currentWidth * ratio) + "px";
         };
         if (img.complete) adjust(); else img.onload = adjust;
     }
@@ -159,18 +186,16 @@
         pageCount++;
         const p = pageCount;
         const totalTemplates = currentSession.files.length;
+        
+        // Logika Mengulang news2 (idx 1) dan news3 (idx 2) untuk page 4++
         let fileIdx;
-
         if (totalTemplates > 1) {
-        // (p-2) membuat Page 2 mulai dari hitungan 0
-        // % (totalTemplates - 1) memastikan hanya berputar di index 1 sampai terakhir
-        // + 1 memastikan hasil akhirnya tidak pernah 0 (selalu index 1 atau lebih)
-        fileIdx = ((p - 2) % (totalTemplates - 1)) + 1;
-    } else {
-        fileIdx = 0; // Jaga-jaga jika hanya ada 1 file di config
-    }
+            fileIdx = ((p - 2) % (totalTemplates - 1)) + 1;
+        } else {
+            fileIdx = 0;
+        }
 
-    const templateFile = currentSession.files[fileIdx];
+        const templateFile = currentSession.files[fileIdx];
 
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
@@ -204,27 +229,24 @@
         initInteract(wrap.querySelector(`#box-img-p${p}-1`));
         initInteract(wrap.querySelector(`#box-txt-p${p}`));
         autoScaleCanvas(`page-${p}`);
+        
+        if (window.innerWidth <= 768) toggleSidebar();
     }
 
     function addExtraPhoto(pageNum) {
         imgCounter++;
         const id = `extra-${imgCounter}`;
-        
-        // Input di Sidebar
         const container = document.getElementById(`img-inputs-p${pageNum}`);
         const div = document.createElement('div');
         div.innerHTML = `<label>Foto Tambahan</label><input type="file" onchange="uploadToElement(this, 'img-${id}', 'box-img-${id}')">`;
         container.appendChild(div);
 
-        // Elemen di Canvas
         const layer = document.getElementById(`photo-layer-p${pageNum}`);
         const el = document.createElement('div');
-        el.className = 'editable';
-        el.id = `box-img-${id}`;
+        el.className = 'editable'; el.id = `box-img-${id}`;
         el.style = "width:150px; height:150px; left:50px; top:50px; display:none; z-index:11;";
         el.innerHTML = `<img id="img-${id}" class="user-image"><div class="handle h-resizer"></div><div class="handle h-rotator"></div>`;
         layer.appendChild(el);
-        
         initInteract(el);
     }
 
@@ -234,15 +256,12 @@
             reader.onload = (e) => {
                 const img = document.getElementById(targetImgId);
                 const box = document.getElementById(boxId);
-                
                 const tempImg = new Image();
                 tempImg.onload = function() {
-                    // MENGATUR UKURAN BOX SESUAI ASLINYA AGAR TIDAK STRETCH
                     const originalRatio = tempImg.height / tempImg.width;
-                    const defaultWidth = 300; // Lebar standar saat upload
+                    const defaultWidth = 300; 
                     box.style.width = defaultWidth + "px";
                     box.style.height = (defaultWidth * originalRatio) + "px";
-                    
                     img.src = e.target.result;
                     box.style.display = "flex";
                 };
@@ -252,7 +271,7 @@
         }
     }
 
-    // --- Interaction Engine ---
+    // Interaction Engine
     let activeEl = null, isDragging = false, isResizing = false, isRotating = false;
     let startX, startY, startW, startH, startFontSize, startAngle;
 
@@ -270,24 +289,30 @@
 
         if (e.target.classList.contains('h-resizer')) {
             isResizing = true; startW = el.offsetWidth; startH = el.offsetHeight;
-            startX = e.clientX; startY = e.clientY;
+            startX = e.clientX || e.pageX; startY = e.clientY || e.pageY;
             const txt = el.querySelector('.text-element');
             if(txt) startFontSize = parseFloat(window.getComputedStyle(txt).fontSize);
         } else if (e.target.classList.contains('h-rotator')) {
             isRotating = true; const center = getCenter(el);
-            startAngle = Math.atan2(e.clientY - center.y, e.clientX - center.x) - getRotation(el);
+            const clientX = e.clientX || e.pageX; const clientY = e.clientY || e.pageY;
+            startAngle = Math.atan2(clientY - center.y, clientX - center.x) - getRotation(el);
         } else {
-            isDragging = true; startX = e.clientX - el.offsetLeft; startY = e.clientY - el.offsetTop;
+            isDragging = true; startX = (e.clientX || e.pageX) - el.offsetLeft; startY = (e.clientY || e.pageY) - el.offsetTop;
         }
     }
 
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', (e) => handleMove(e.touches[0]), {passive: false});
+
+    function handleMove(e) {
         if (!activeEl) return;
+        const clientX = e.clientX || e.pageX; const clientY = e.clientY || e.pageY;
+
         if (isDragging) {
-            activeEl.style.left = (e.clientX - startX) + 'px';
-            activeEl.style.top = (e.clientY - startY) + 'px';
+            activeEl.style.left = (clientX - startX) + 'px';
+            activeEl.style.top = (clientY - startY) + 'px';
         } else if (isResizing) {
-            const newW = Math.max(20, startW + (e.clientX - startX));
+            const newW = Math.max(20, startW + (clientX - startX));
             activeEl.style.width = newW + 'px';
             const txt = activeEl.querySelector('.text-element');
             if (txt) {
@@ -297,12 +322,14 @@
             }
         } else if (isRotating) {
             const center = getCenter(activeEl);
-            const angle = Math.atan2(e.clientY - center.y, e.clientX - center.x);
+            const angle = Math.atan2(clientY - center.y, clientX - center.x);
             activeEl.style.transform = `rotate(${(angle - startAngle) * (180/Math.PI)}deg)`;
         }
-    });
+    }
 
     document.addEventListener('mouseup', () => isDragging = isResizing = isRotating = false);
+    document.addEventListener('touchend', () => isDragging = isResizing = isRotating = false);
+
     function getCenter(el) { const r = el.getBoundingClientRect(); return { x: r.left + r.width/2, y: r.top + r.height/2 }; }
     function getRotation(el) {
         const st = window.getComputedStyle(el, null);
