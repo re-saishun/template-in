@@ -20,14 +20,15 @@
         .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); }
         .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background: #0f172a; }
 
-        /* PERBAIKAN: Tinggi dihapus agar otomatis mengikuti gambar */
-        .page-wrapper { position: relative; width: 500px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; transition: height 0.3s ease; }
+        .page-wrapper { position: relative; width: 500px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; }
         .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }        
         .layer-manager { position: absolute; inset: 0; z-index: auto; } 
 
         .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
         .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
-        .user-image { width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+        
+        /* PERBAIKAN: Tidak Stretch */
+        .user-image { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
         .handle { position: absolute; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; z-index: 100; }
@@ -39,6 +40,7 @@
         label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
         textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
+        .btn-sm { padding: 6px; font-size: 10px; margin-top: 5px; background: #475569; }
 
         .layer-dots { display: flex; gap: 8px; margin-top: 10px; }
         .dot-btn { flex: 1; padding: 8px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 10px; color: #94a3b8; text-align: center; transition: 0.2s; }
@@ -64,14 +66,11 @@
 <div id="main-app">
     <div class="sidebar">
         <h2 style="text-align:center; color:var(--primary); font-size: 18px;">EDITOR PANEL</h2>
-        <div id="sidebar-controls">
-            </div>
+        <div id="sidebar-controls"></div>
         <button class="btn" style="background: var(--accent)" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
         <button class="btn" style="background: var(--primary)" onclick="openExport()">DOWNLOAD HASIL</button>
     </div>
-
-    <div class="preview-container" id="preview-list">
-        </div>
+    <div class="preview-container" id="preview-list"></div>
 </div>
 
 <div id="export-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; justify-content:center; align-items:center;">
@@ -88,20 +87,17 @@
     let configData = { "templates": [] };
     let currentSession = null;
     let pageCount = 0;
+    let imgCounter = 0; // Untuk ID unik foto tambahan
 
-    // Load Config
     fetch('config.json').then(r => r.json()).then(d => { 
         configData = d; 
         document.getElementById('auth-status').innerText = "Config Synced."; 
-    }).catch(e => {
-        document.getElementById('auth-status').innerText = "Error Loading Config!";
     });
 
     function checkAccess() {
         const cat = document.getElementById('auth-category').value;
         const code = document.getElementById('auth-code').value;
         const found = configData.templates.find(t => t.category === cat && t.code === code);
-        
         if (found) {
             currentSession = found;
             document.getElementById('auth-overlay').style.display = 'none';
@@ -110,7 +106,6 @@
         } else { alert("Kode Akses Salah!"); }
     }
 
-    // Fungsi Universal menyesuaikan tinggi berdasarkan gambar asli
     function autoScaleCanvas(pageId) {
         const wrapper = document.getElementById(pageId);
         const img = wrapper.querySelector('.template-frame');
@@ -125,28 +120,26 @@
         pageCount = 1;
         const templateFile = currentSession.files[0];
         
-        // Buat Control Sidebar
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
         ctrl.innerHTML = `
             <h3 style="font-size:14px; color:var(--accent)">PAGE 1 (COVER)</h3>
-            <label>Headline Utama</label>
+            <label>Headline</label>
             <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
-            <label>Background</label>
-            <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
+            <label>Foto Cover</label>
+            <input type="file" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
             <div class="layer-dots">
                 <div class="dot-btn" onclick="setLayerDot('box-img-p1', 1, this)">● Di Bawah</div>
                 <div class="dot-btn active" onclick="setLayerDot('box-img-p1', 10, this)">● Di Atas</div>
             </div>`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
 
-        // Buat Preview
         const wrap = document.createElement('div');
         wrap.className = 'page-wrapper'; wrap.id = `page-1`;
         wrap.innerHTML = `
             <div class="layer-manager">
                 <div class="editable active" id="box-img-p1" style="width: 500px; height: 500px; left: 0; top: 0; z-index: 10;">
-                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500?text=Upload+Image">
+                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500?text=Upload+Cover">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
             </div>
@@ -158,7 +151,6 @@
                 </div>
             </div>`;
         document.getElementById('preview-list').appendChild(wrap);
-        
         initInteract(document.getElementById('box-img-p1'));
         initInteract(document.getElementById('box-txt-p1'));
         autoScaleCanvas('page-1');
@@ -167,52 +159,90 @@
     function addNewPage() {
         pageCount++;
         const p = pageCount;
-        // Ambil template secara berurutan atau acak dari config
         const fileIdx = (p - 1) % currentSession.files.length;
         const templateFile = currentSession.files[fileIdx];
 
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
+        ctrl.id = `ctrl-p${p}`;
         ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-            <label>Teks Narasi</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
-            <label>Foto Utama</label>
-            <input type="file" onchange="uploadToElement(this, 'img-p${p}', 'box-img-p${p}')">`;
+            <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
+            <div id="img-inputs-p${p}">
+                <label>Foto 1</label>
+                <input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
+            </div>
+            <button class="btn btn-sm" onclick="addExtraPhoto(${p})">+ Tambah Foto Lainnya</button>`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
 
         const wrap = document.createElement('div');
         wrap.className = 'page-wrapper'; wrap.id = `page-${p}`;
         wrap.innerHTML = `
             <img src="template/${templateFile}" class="template-frame">
-            <div class="layer-manager">
-                <div class="editable" id="box-img-p${p}" style="width:300px; height:300px; left:100px; top:150px; display:none; z-index:10;">
-                    <img id="img-p${p}" class="user-image">
+            <div class="layer-manager" id="photo-layer-p${p}">
+                <div class="editable" id="box-img-p${p}-1" style="width:250px; height:250px; left:125px; top:150px; display:none; z-index:10;">
+                    <img id="img-p${p}-1" class="user-image">
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
+            </div>
+            <div class="layer-manager">
                 <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px; z-index:15;">
-                    <div id="txt-p${p}" class="text-element" style="font-size:22px;">Isi halaman ${p}...</div>
+                    <div id="txt-p${p}" class="text-element" style="font-size:22px;">Isi teks halaman ${p}...</div>
                     <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
                 </div>
             </div>`;
         document.getElementById('preview-list').appendChild(wrap);
-        initInteract(wrap.querySelector(`#box-img-p${p}`));
+        initInteract(wrap.querySelector(`#box-img-p${p}-1`));
         initInteract(wrap.querySelector(`#box-txt-p${p}`));
         autoScaleCanvas(`page-${p}`);
     }
 
-    // --- Core Editor Functions ---
+    function addExtraPhoto(pageNum) {
+        imgCounter++;
+        const id = `extra-${imgCounter}`;
+        
+        // Input di Sidebar
+        const container = document.getElementById(`img-inputs-p${pageNum}`);
+        const div = document.createElement('div');
+        div.innerHTML = `<label>Foto Tambahan</label><input type="file" onchange="uploadToElement(this, 'img-${id}', 'box-img-${id}')">`;
+        container.appendChild(div);
+
+        // Elemen di Canvas
+        const layer = document.getElementById(`photo-layer-p${pageNum}`);
+        const el = document.createElement('div');
+        el.className = 'editable';
+        el.id = `box-img-${id}`;
+        el.style = "width:150px; height:150px; left:50px; top:50px; display:none; z-index:11;";
+        el.innerHTML = `<img id="img-${id}" class="user-image"><div class="handle h-resizer"></div><div class="handle h-rotator"></div>`;
+        layer.appendChild(el);
+        
+        initInteract(el);
+    }
+
     function uploadToElement(input, targetImgId, boxId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = document.getElementById(targetImgId);
                 const box = document.getElementById(boxId);
-                img.src = e.target.result;
-                box.style.display = "flex";
+                
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    // MENGATUR UKURAN BOX SESUAI ASLINYA AGAR TIDAK STRETCH
+                    const originalRatio = tempImg.height / tempImg.width;
+                    const defaultWidth = 300; // Lebar standar saat upload
+                    box.style.width = defaultWidth + "px";
+                    box.style.height = (defaultWidth * originalRatio) + "px";
+                    
+                    img.src = e.target.result;
+                    box.style.display = "flex";
+                };
+                tempImg.src = e.target.result;
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
+    // --- Interaction Engine ---
     let activeEl = null, isDragging = false, isResizing = false, isRotating = false;
     let startX, startY, startW, startH, startFontSize, startAngle;
 
