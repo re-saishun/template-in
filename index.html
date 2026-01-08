@@ -11,29 +11,22 @@
         :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --accent: #10b981; --border: #334155; }
         body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
 
-        /* AUTH MODAL */
         #auth-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .modal { background: var(--card); padding: 40px; border-radius: 20px; width: 350px; text-align: center; border: 1px solid var(--border); }
         .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
         .modal button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
-        /* MAIN APP */
         #main-app { display: none; width: 100%; height: 100vh; flex-direction: row; }
         .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); }
-        
-        /* PERBAIKAN: Preview Container agar pas */
         .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background: #0f172a; }
 
-        /* CANVAS */
-        .page-wrapper { position: relative; width: 500px; height: 707px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; }
+        /* PERBAIKAN: Tinggi dihapus agar otomatis mengikuti gambar */
+        .page-wrapper { position: relative; width: 500px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; transition: height 0.3s ease; }
         .template-frame { position: absolute; top: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }        
-        
-        /* Perbaikan Layering Page 1 agar bisa digeser */
         .layer-manager { position: absolute; inset: 0; z-index: auto; } 
 
         .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
         .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
-        
         .user-image { width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
@@ -42,13 +35,11 @@
         .h-resizer { right: -8px; bottom: -8px; cursor: nwse-resize; }
         .h-rotator { top: -35px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
 
-        /* UI Controls */
         .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
         label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
         textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
 
-        /* PERBAIKAN: Dot Layer Style */
         .layer-dots { display: flex; gap: 8px; margin-top: 10px; }
         .dot-btn { flex: 1; padding: 8px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 10px; color: #94a3b8; text-align: center; transition: 0.2s; }
         .dot-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
@@ -74,40 +65,13 @@
     <div class="sidebar">
         <h2 style="text-align:center; color:var(--primary); font-size: 18px;">EDITOR PANEL</h2>
         <div id="sidebar-controls">
-            <div class="control-group">
-                <h3 style="font-size:14px; color:var(--accent)">PAGE 1 (COVER)</h3>
-                <label>Headline Utama</label>
-                <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
-                <label>Background</label>
-                <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
-                
-                <div class="layer-dots">
-                    <div class="dot-btn" onclick="setLayerDot('box-img-p1', 1, this)">● Di Bawah</div>
-                    <div class="dot-btn active" onclick="setLayerDot('box-img-p1', 10, this)">● Di Atas</div>
-                </div>
             </div>
-        </div>
         <button class="btn" style="background: var(--accent)" onclick="addNewPage()">+ TAMBAH HALAMAN</button>
         <button class="btn" style="background: var(--primary)" onclick="openExport()">DOWNLOAD HASIL</button>
     </div>
 
     <div class="preview-container" id="preview-list">
-        <div class="page-wrapper" id="page-1">
-            <div class="layer-manager">
-                <div class="editable active" id="box-img-p1" style="width: 500px; height: 707px; left: 0; top: 0; z-index: 10;">
-                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500x707?text=Background+P1">
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-            </div>
-            <img src="template/news1.png" class="template-frame">
-            <div class="layer-manager">
-                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 380px; z-index: 15;">
-                    <div id="txt-p1" class="text-element" style="font-size: 40px; color: black;">HEADLINE BERITA UTAMA</div>
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-            </div>
         </div>
-    </div>
 </div>
 
 <div id="export-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; z-index:10000; justify-content:center; align-items:center;">
@@ -122,39 +86,128 @@
 
 <script>
     let configData = { "templates": [] };
-    const authStatus = document.getElementById('auth-status');
+    let currentSession = null;
+    let pageCount = 0;
 
-    fetch('config.json').then(r => r.json()).then(d => { configData = d; authStatus.innerText = "Config Loaded."; })
-    .catch(() => {
-        configData = { "templates": [{ "category": "NEWS", "code": "sakatimes" }, { "category": "MAJALAH", "code": "kreatif2026" }] };
-        authStatus.innerText = "Offline Mode.";
+    // Load Config
+    fetch('config.json').then(r => r.json()).then(d => { 
+        configData = d; 
+        document.getElementById('auth-status').innerText = "Config Synced."; 
+    }).catch(e => {
+        document.getElementById('auth-status').innerText = "Error Loading Config!";
     });
 
     function checkAccess() {
         const cat = document.getElementById('auth-category').value;
         const code = document.getElementById('auth-code').value;
         const found = configData.templates.find(t => t.category === cat && t.code === code);
+        
         if (found) {
+            currentSession = found;
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
+            setupFirstPage();
         } else { alert("Kode Akses Salah!"); }
     }
 
+    // Fungsi Universal menyesuaikan tinggi berdasarkan gambar asli
+    function autoScaleCanvas(pageId) {
+        const wrapper = document.getElementById(pageId);
+        const img = wrapper.querySelector('.template-frame');
+        const adjust = () => {
+            const ratio = img.naturalHeight / img.naturalWidth;
+            wrapper.style.height = (500 * ratio) + "px";
+        };
+        if (img.complete) adjust(); else img.onload = adjust;
+    }
+
+    function setupFirstPage() {
+        pageCount = 1;
+        const templateFile = currentSession.files[0];
+        
+        // Buat Control Sidebar
+        const ctrl = document.createElement('div');
+        ctrl.className = 'control-group';
+        ctrl.innerHTML = `
+            <h3 style="font-size:14px; color:var(--accent)">PAGE 1 (COVER)</h3>
+            <label>Headline Utama</label>
+            <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
+            <label>Background</label>
+            <input type="file" accept="image/*" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
+            <div class="layer-dots">
+                <div class="dot-btn" onclick="setLayerDot('box-img-p1', 1, this)">● Di Bawah</div>
+                <div class="dot-btn active" onclick="setLayerDot('box-img-p1', 10, this)">● Di Atas</div>
+            </div>`;
+        document.getElementById('sidebar-controls').appendChild(ctrl);
+
+        // Buat Preview
+        const wrap = document.createElement('div');
+        wrap.className = 'page-wrapper'; wrap.id = `page-1`;
+        wrap.innerHTML = `
+            <div class="layer-manager">
+                <div class="editable active" id="box-img-p1" style="width: 500px; height: 500px; left: 0; top: 0; z-index: 10;">
+                    <img id="img-p1" class="user-image" src="https://via.placeholder.com/500?text=Upload+Image">
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
+                </div>
+            </div>
+            <img src="template/${templateFile}" class="template-frame">
+            <div class="layer-manager">
+                <div class="editable" id="box-txt-p1" style="width: 440px; left: 30px; top: 300px; z-index: 15;">
+                    <div id="txt-p1" class="text-element" style="font-size: 40px; color: black;">HEADLINE BERITA UTAMA</div>
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
+                </div>
+            </div>`;
+        document.getElementById('preview-list').appendChild(wrap);
+        
+        initInteract(document.getElementById('box-img-p1'));
+        initInteract(document.getElementById('box-txt-p1'));
+        autoScaleCanvas('page-1');
+    }
+
+    function addNewPage() {
+        pageCount++;
+        const p = pageCount;
+        // Ambil template secara berurutan atau acak dari config
+        const fileIdx = (p - 1) % currentSession.files.length;
+        const templateFile = currentSession.files[fileIdx];
+
+        const ctrl = document.createElement('div');
+        ctrl.className = 'control-group';
+        ctrl.innerHTML = `<h3>PAGE ${p}</h3>
+            <label>Teks Narasi</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
+            <label>Foto Utama</label>
+            <input type="file" onchange="uploadToElement(this, 'img-p${p}', 'box-img-p${p}')">`;
+        document.getElementById('sidebar-controls').appendChild(ctrl);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'page-wrapper'; wrap.id = `page-${p}`;
+        wrap.innerHTML = `
+            <img src="template/${templateFile}" class="template-frame">
+            <div class="layer-manager">
+                <div class="editable" id="box-img-p${p}" style="width:300px; height:300px; left:100px; top:150px; display:none; z-index:10;">
+                    <img id="img-p${p}" class="user-image">
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
+                </div>
+                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px; z-index:15;">
+                    <div id="txt-p${p}" class="text-element" style="font-size:22px;">Isi halaman ${p}...</div>
+                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
+                </div>
+            </div>`;
+        document.getElementById('preview-list').appendChild(wrap);
+        initInteract(wrap.querySelector(`#box-img-p${p}`));
+        initInteract(wrap.querySelector(`#box-txt-p${p}`));
+        autoScaleCanvas(`page-${p}`);
+    }
+
+    // --- Core Editor Functions ---
     function uploadToElement(input, targetImgId, boxId) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = document.getElementById(targetImgId);
                 const box = document.getElementById(boxId);
-                const tempImg = new Image();
-                tempImg.onload = function() {
-                    const ratioHeight = (tempImg.height / tempImg.width) * 500;
-                    box.style.width = '500px';
-                    box.style.height = ratioHeight + 'px';
-                    img.src = e.target.result;
-                    box.style.display = "flex";
-                };
-                tempImg.src = e.target.result;
+                img.src = e.target.result;
+                box.style.display = "flex";
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -220,70 +273,13 @@
     }
 
     function updateLiveText(id, val) { document.getElementById(id).innerText = val; }
-
     function setLayerDot(targetBoxId, zValue, btn) {
         const target = document.getElementById(targetBoxId);
         if (target) {
             target.style.zIndex = zValue;
-            const parent = btn.parentElement;
-            parent.querySelectorAll('.dot-btn').forEach(d => d.classList.remove('active'));
+            btn.parentElement.querySelectorAll('.dot-btn').forEach(d => d.classList.remove('active'));
             btn.classList.add('active');
         }
-    }
-
-    let pageCount = 1;
-    function addNewPage() {
-        pageCount++;
-        const p = pageCount;
-        const temp = (p % 2 === 0) ? 'news2.jpg' : 'news3.jpg';
-        
-        const ctrl = document.createElement('div');
-        ctrl.className = 'control-group';
-        ctrl.innerHTML = `<h3>PAGE ${p}</h3>
-            <label>Teks</label><textarea oninput="updateLiveText('txt-p${p}', this.value)"></textarea>
-            <label>Foto 1</label>
-            <input type="file" onchange="uploadToElement(this, 'img-p${p}-1', 'box-img-p${p}-1')">
-            <select onchange="changeLayer('box-img-p${p}-1', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
-                <option value="1">Layer 1 (Bawah)</option>
-                <option value="5">Layer 2 (Sejajar Template)</option>
-                <option value="10" selected>Layer 3 (Atas)</option>
-            </select>
-            <label>Foto 2</label>
-            <input type="file" onchange="uploadToElement(this, 'img-p${p}-2', 'box-img-p${p}-2')">
-            <select onchange="changeLayer('box-img-p${p}-2', this.value)" style="width:100%; padding:5px; margin-top:5px; background:#0f172a; color:white; border:1px solid var(--border); border-radius:4px; font-size:11px;">
-                <option value="1">Layer 1 (Bawah)</option>
-                <option value="5">Layer 2 (Sejajar Template)</option>
-                <option value="10" selected>Layer 3 (Atas)</option>
-            </select>`;
-        document.getElementById('sidebar-controls').appendChild(ctrl);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'page-wrapper'; wrap.id = `page-${p}`;
-        wrap.innerHTML = `
-            <img src="template/${temp}" class="template-frame">
-            <div class="layer-manager">
-                <div class="editable" id="box-img-p${p}-1" style="width:200px; height:200px; left:20px; top:150px; display:none; z-index:10;">
-                    <img id="img-p${p}-1" class="user-image">
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-                <div class="editable" id="box-img-p${p}-2" style="width:200px; height:200px; left:250px; top:150px; display:none; z-index:10;">
-                    <img id="img-p${p}-2" class="user-image">
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-                <div class="editable" id="box-txt-p${p}" style="width:400px; left:50px; top:50px; z-index:15;">
-                    <div id="txt-p${p}" class="text-element" style="font-size:22px;">Narasi halaman ${p}...</div>
-                    <div class="handle h-resizer"></div><div class="handle h-rotator"></div>
-                </div>
-            </div>`;
-        document.getElementById('preview-list').appendChild(wrap);
-        initInteract(wrap.querySelector(`#box-img-p${p}-1`));
-        initInteract(wrap.querySelector(`#box-img-p${p}-2`));
-        initInteract(wrap.querySelector(`#box-txt-p${p}`));
-    }
-
-    function changeLayer(targetBoxId, zValue) {
-        const target = document.getElementById(targetBoxId);
-        if (target) target.style.zIndex = zValue;
     }
 
     function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
@@ -294,10 +290,11 @@
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         for(let i=1; i<=pageCount; i++) {
-            const canvas = await html2canvas(document.getElementById(`page-${i}`), { scale: 3, useCORS: true });
+            const page = document.getElementById(`page-${i}`);
+            const canvas = await html2canvas(page, { scale: 2, useCORS: true });
             if (format === 'pdf') {
                 if (i > 1) pdf.addPage();
-                pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0, 210, 297);
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
             } else {
                 const link = document.createElement('a');
                 link.download = `Page_${i}.png`;
@@ -305,12 +302,9 @@
                 link.click();
             }
         }
-        if (format === 'pdf') pdf.save('Desain_Final.pdf');
+        if (format === 'pdf') pdf.save('Export_Desain.pdf');
         closeExport();
     }
-
-    initInteract(document.getElementById('box-img-p1'));
-    initInteract(document.getElementById('box-txt-p1'));
 </script>
 </body>
 </html>
