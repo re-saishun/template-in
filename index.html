@@ -158,8 +158,19 @@
     function addNewPage() {
         pageCount++;
         const p = pageCount;
-        const fileIdx = (p - 1) % currentSession.files.length;
-        const templateFile = currentSession.files[fileIdx];
+        const totalTemplates = currentSession.files.length;
+        let fileIdx;
+
+        if (totalTemplates > 1) {
+        // (p-2) membuat Page 2 mulai dari hitungan 0
+        // % (totalTemplates - 1) memastikan hanya berputar di index 1 sampai terakhir
+        // + 1 memastikan hasil akhirnya tidak pernah 0 (selalu index 1 atau lebih)
+        fileIdx = ((p - 2) % (totalTemplates - 1)) + 1;
+    } else {
+        fileIdx = 0; // Jaga-jaga jika hanya ada 1 file di config
+    }
+
+    const templateFile = currentSession.files[fileIdx];
 
         const ctrl = document.createElement('div');
         ctrl.className = 'control-group';
