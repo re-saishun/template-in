@@ -2,14 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TEMPLATE-IN Pro | Professional Editor</title>
     <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --accent: #10b981; --border: #334155; }
-        body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
+        body { margin: 0; font-family: 'League Spartan', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; touch-action: manipulation; }
 
         /* Auth Overlay */
         #auth-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -25,7 +25,7 @@
         #sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
 
         .sidebar { width: 360px; background: #111827; padding: 25px; overflow-y: auto; border-right: 1px solid var(--border); transition: 0.3s ease; }
-        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background: #0f172a; }
+        .preview-container { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background: #0f172a; -webkit-overflow-scrolling: touch; }
 
         /* Canvas Page */
         .page-wrapper { position: relative; width: 500px; background: white; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6); flex-shrink: 0; margin-bottom: 40px; }
@@ -33,26 +33,22 @@
         .layer-manager { position: absolute; inset: 0; z-index: auto; } 
 
         /* Elements */
-        .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; }
-        .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+        .editable { position: absolute; cursor: move; border: 1.5px dashed transparent; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; }
+        .editable.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); z-index: 100 !important; }
         .user-image { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
         .text-element { width: 100%; text-align: center; color: black; font-weight: 700; pointer-events: none; white-space: pre-wrap; line-height: 1.1; }
 
         /* Controls */
-        .handle { position: absolute; width: 16px; height: 16px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; z-index: 100; }
+        .handle { position: absolute; width: 24px; height: 24px; background: white; border: 2px solid var(--primary); border-radius: 50%; display: none; z-index: 101; }
         .editable.active .handle { display: block; }
-        .h-resizer { right: -8px; bottom: -8px; cursor: nwse-resize; }
-        .h-rotator { top: -35px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
+        .h-resizer { right: -12px; bottom: -12px; cursor: nwse-resize; }
+        .h-rotator { top: -45px; left: 50%; transform: translateX(-50%); cursor: grab; background: var(--accent); border-color: white; }
 
         .control-group { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
         label { display: block; margin: 10px 0 5px; font-size: 11px; color: #94a3b8; font-weight: bold; }
         textarea { width: 100%; height: 60px; background: #0f172a; color: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: none; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
-        .btn-sm { padding: 6px; font-size: 10px; margin-top: 5px; background: #475569; }
-
-        .layer-dots { display: flex; gap: 8px; margin-top: 10px; }
-        .dot-btn { flex: 1; padding: 8px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 10px; color: #94a3b8; text-align: center; transition: 0.2s; }
-        .dot-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-sm { padding: 8px; font-size: 10px; margin-top: 5px; background: #475569; }
 
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
@@ -153,11 +149,7 @@
             <label>Headline</label>
             <textarea oninput="updateLiveText('txt-p1', this.value)">HEADLINE BERITA UTAMA</textarea>
             <label>Foto Cover</label>
-            <input type="file" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">
-            <div class="layer-dots">
-                <div class="dot-btn" onclick="setLayerDot('box-img-p1', 1, this)">● Di Bawah</div>
-                <div class="dot-btn active" onclick="setLayerDot('box-img-p1', 10, this)">● Di Atas</div>
-            </div>`;
+            <input type="file" onchange="uploadToElement(this, 'img-p1', 'box-img-p1')">`;
         document.getElementById('sidebar-controls').appendChild(ctrl);
 
         const wrap = document.createElement('div');
@@ -187,14 +179,7 @@
         const p = pageCount;
         const totalTemplates = currentSession.files.length;
         
-        // Logika Mengulang news2 (idx 1) dan news3 (idx 2) untuk page 4++
-        let fileIdx;
-        if (totalTemplates > 1) {
-            fileIdx = ((p - 2) % (totalTemplates - 1)) + 1;
-        } else {
-            fileIdx = 0;
-        }
-
+        let fileIdx = (totalTemplates > 1) ? ((p - 2) % (totalTemplates - 1)) + 1 : 0;
         const templateFile = currentSession.files[fileIdx];
 
         const ctrl = document.createElement('div');
@@ -271,42 +256,45 @@
         }
     }
 
-    // Interaction Engine
+    // Interaction Engine (Smooth Mobile)
     let activeEl = null, isDragging = false, isResizing = false, isRotating = false;
     let startX, startY, startW, startH, startFontSize, startAngle;
 
     function initInteract(el) {
         el.addEventListener('mousedown', startInteract);
-        el.addEventListener('touchstart', (e) => startInteract(e.touches[0]), {passive: false});
+        el.addEventListener('touchstart', startInteract, {passive: false});
     }
 
     function startInteract(e) {
         const el = e.target.closest('.editable');
         if (!el) return;
+        
         document.querySelectorAll('.editable').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         activeEl = el;
 
+        const clientX = e.clientX || (e.touches ? e.touches[0].pageX : 0);
+        const clientY = e.clientY || (e.touches ? e.touches[0].pageY : 0);
+
         if (e.target.classList.contains('h-resizer')) {
             isResizing = true; startW = el.offsetWidth; startH = el.offsetHeight;
-            startX = e.clientX || e.pageX; startY = e.clientY || e.pageY;
+            startX = clientX; startY = clientY;
             const txt = el.querySelector('.text-element');
             if(txt) startFontSize = parseFloat(window.getComputedStyle(txt).fontSize);
         } else if (e.target.classList.contains('h-rotator')) {
             isRotating = true; const center = getCenter(el);
-            const clientX = e.clientX || e.pageX; const clientY = e.clientY || e.pageY;
             startAngle = Math.atan2(clientY - center.y, clientX - center.x) - getRotation(el);
         } else {
-            isDragging = true; startX = (e.clientX || e.pageX) - el.offsetLeft; startY = (e.clientY || e.pageY) - el.offsetTop;
+            isDragging = true; startX = clientX - el.offsetLeft; startY = clientY - el.offsetTop;
         }
     }
 
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('touchmove', (e) => handleMove(e.touches[0]), {passive: false});
-
     function handleMove(e) {
         if (!activeEl) return;
-        const clientX = e.clientX || e.pageX; const clientY = e.clientY || e.pageY;
+        if (e.cancelable) e.preventDefault(); // Kunci scroll layar
+
+        const clientX = e.clientX || (e.touches ? e.touches[0].pageX : 0);
+        const clientY = e.clientY || (e.touches ? e.touches[0].pageY : 0);
 
         if (isDragging) {
             activeEl.style.left = (clientX - startX) + 'px';
@@ -327,6 +315,8 @@
         }
     }
 
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', handleMove, {passive: false});
     document.addEventListener('mouseup', () => isDragging = isResizing = isRotating = false);
     document.addEventListener('touchend', () => isDragging = isResizing = isRotating = false);
 
@@ -340,15 +330,6 @@
     }
 
     function updateLiveText(id, val) { document.getElementById(id).innerText = val; }
-    function setLayerDot(targetBoxId, zValue, btn) {
-        const target = document.getElementById(targetBoxId);
-        if (target) {
-            target.style.zIndex = zValue;
-            btn.parentElement.querySelectorAll('.dot-btn').forEach(d => d.classList.remove('active'));
-            btn.classList.add('active');
-        }
-    }
-
     function openExport() { document.getElementById('export-modal').style.display = 'flex'; }
     function closeExport() { document.getElementById('export-modal').style.display = 'none'; }
 
